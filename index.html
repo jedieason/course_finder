@@ -80,6 +80,12 @@
         display: flex;
         min-height: 82px;
         align-items: center;
+      }
+
+      .site-header-inner {
+        display: flex;
+        min-height: inherit;
+        align-items: center;
         justify-content: space-between;
         gap: 24px;
       }
@@ -1119,6 +1125,7 @@
         position: sticky;
         z-index: 50;
         top: 0;
+        width: 100%;
         min-height: 72px;
         background: rgba(255, 255, 255, 0.96);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -1433,20 +1440,22 @@
     </style>
   </head>
   <body>
-    <header class="shell site-header">
-      <a class="brand" href="#top" aria-label="選課樂透首頁">
-        <span class="brand-mark" aria-hidden="true">樂</span>
-        <span class="brand-copy">
-          <strong>選課樂透</strong>
-          <small>NTU course finder</small>
-        </span>
-      </a>
-      <a class="header-link" href="https://course.ntu.edu.tw/" target="_blank" rel="noreferrer">
-        <span>前往臺大課程網</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-        </svg>
-      </a>
+    <header class="site-header">
+      <div class="shell site-header-inner">
+        <a class="brand" href="#top" aria-label="選課樂透首頁">
+          <span class="brand-mark" aria-hidden="true">樂</span>
+          <span class="brand-copy">
+            <strong>選課樂透</strong>
+            <small>NTU course finder</small>
+          </span>
+        </a>
+        <a class="header-link" href="https://course.ntu.edu.tw/" target="_blank" rel="noreferrer">
+          <span>前往臺大課程網</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          </svg>
+        </a>
+      </div>
     </header>
 
     <main id="top" class="shell">
