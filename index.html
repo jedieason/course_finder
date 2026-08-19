@@ -912,12 +912,13 @@
         width: 100%;
         margin-top: 14px;
         padding: 14px 18px;
-        border: 1px solid #cfd8d3;
+        border: 0;
         border-radius: 14px;
         background: transparent;
-        color: var(--ink);
-        cursor: pointer;
-        font-weight: 800;
+        color: var(--muted);
+        cursor: default;
+        font-size: 12px;
+        font-weight: 700;
       }
 
       .load-more.visible {
@@ -925,8 +926,20 @@
       }
 
       .load-more:hover {
-        border-color: #83a79f;
-        background: rgba(255, 255, 255, 0.5);
+        background: transparent;
+      }
+
+      .load-more.fallback {
+        border: 1px solid #cfd8d3;
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .load-more.fallback:hover {
+        border-color: #9db5db;
+        background: #f7f9fd;
       }
 
       footer {
@@ -1573,7 +1586,7 @@
         </div>
 
         <div id="course-list" class="course-list"></div>
-        <button id="load-more" class="load-more" type="button">顯示更多</button>
+        <button id="load-more" class="load-more" type="button" aria-live="polite">繼續向下捲動以載入更多</button>
       </section>
     </main>
 
@@ -1607,6 +1620,7 @@
         controller: null,
         isSearching: false,
         dragValue: null,
+        autoLoadPending: false,
       };
 
       const elements = {
@@ -2110,7 +2124,29 @@
         state.renderedCount = end;
         const hasMore = end < list.length;
         elements.loadMore.classList.toggle("visible", hasMore);
-        if (hasMore) elements.loadMore.textContent = `顯示更多（尚有 ${(list.length - end).toLocaleString("zh-TW")} 門）`;
+        if (hasMore) {
+          elements.loadMore.textContent = elements.loadMore.classList.contains("fallback")
+            ? `顯示更多（尚有 ${(list.length - end).toLocaleString("zh-TW")} 門）`
+            : `繼續向下捲動（尚有 ${(list.length - end).toLocaleString("zh-TW")} 門）`;
+        }
+      }
+
+      function setupAutomaticLoading() {
+        if (!("IntersectionObserver" in window)) {
+          elements.loadMore.classList.add("fallback");
+          return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+          const shouldLoad = entries.some((entry) => entry.isIntersecting);
+          if (!shouldLoad || !elements.loadMore.classList.contains("visible") || state.autoLoadPending) return;
+          state.autoLoadPending = true;
+          requestAnimationFrame(() => {
+            renderNextBatch();
+            state.autoLoadPending = false;
+          });
+        }, { rootMargin: "320px 0px" });
+        observer.observe(elements.loadMore);
       }
 
       function safeNumber(value) {
@@ -2291,6 +2327,7 @@
       elements.unrankedTab.addEventListener("click", () => activateResultTab("unranked"));
       elements.loadMore.addEventListener("click", renderNextBatch);
       document.querySelectorAll('input[name="match-mode"]').forEach((input) => input.addEventListener("change", syncUrl));
+      setupAutomaticLoading();
     </script>
   </body>
 </html>
