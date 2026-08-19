@@ -1765,21 +1765,38 @@
       }
 
       function attachTagInput(input, type) {
+        let isComposing = false;
+        let commitAfterComposition = false;
+
+        const commitInput = () => {
+          const values = splitTagInput(input.value);
+          if (values.length) addTags(type, values);
+          input.value = "";
+        };
+
+        input.addEventListener("compositionstart", () => {
+          isComposing = true;
+        });
+        input.addEventListener("compositionend", () => {
+          isComposing = false;
+          if (commitAfterComposition) {
+            commitAfterComposition = false;
+            requestAnimationFrame(commitInput);
+          }
+        });
         input.addEventListener("keydown", (event) => {
+          if (event.isComposing || isComposing) {
+            if (event.key === "Enter") commitAfterComposition = true;
+            return;
+          }
           if (event.key === "Enter" || event.key === "," || event.key === "，") {
             event.preventDefault();
-            const values = splitTagInput(input.value);
-            if (values.length) addTags(type, values);
-            input.value = "";
+            commitInput();
           } else if (event.key === "Backspace" && !input.value && state[type].length) {
             removeTag(type, state[type].length - 1);
           }
         });
-        input.addEventListener("blur", () => {
-          const values = splitTagInput(input.value);
-          if (values.length) addTags(type, values);
-          input.value = "";
-        });
+        input.addEventListener("blur", commitInput);
         input.addEventListener("paste", (event) => {
           const text = event.clipboardData?.getData("text") || "";
           if (/[，,\n]/.test(text)) {
