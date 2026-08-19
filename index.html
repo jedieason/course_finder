@@ -1084,26 +1084,26 @@
         }
       }
 
-      /* Material Design 3 visual system */
+      /* Visual language inspired by the NTU Course website */
       :root {
-        --ink: #17201e;
-        --muted: #596460;
-        --paper: #f7faf6;
+        --ink: #111111;
+        --muted: #707070;
+        --paper: #fbfbfb;
         --surface: #ffffff;
-        --line: #c2cac6;
-        --primary: #006b57;
-        --primary-deep: #005143;
-        --primary-soft: #9df2d7;
-        --accent: #4f635d;
-        --danger: #ba1a1a;
-        --warning: #825500;
+        --line: #ddd5d5;
+        --primary: #326abe;
+        --primary-deep: #2859a3;
+        --primary-soft: #e8effb;
+        --accent: #5f6670;
+        --danger: #c74635;
+        --warning: #ae6500;
         --shadow: none;
-        --md-surface-container-low: #f1f5f1;
-        --md-surface-container: #ebefeb;
-        --md-surface-container-high: #e5e9e5;
-        --md-surface-container-highest: #dfe4df;
+        --md-surface-container-low: #ffffff;
+        --md-surface-container: #f7f7f7;
+        --md-surface-container-high: #f1f1f1;
+        --md-surface-container-highest: #e9e9e9;
         --md-on-primary: #ffffff;
-        --md-on-primary-container: #002019;
+        --md-on-primary-container: #173c78;
       }
 
       body {
@@ -1120,8 +1120,9 @@
         z-index: 50;
         top: 0;
         min-height: 72px;
-        background: color-mix(in srgb, var(--paper) 92%, transparent);
-        backdrop-filter: blur(18px);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(14px);
       }
 
       .site-header::after {
@@ -1130,43 +1131,38 @@
         bottom: 0;
         left: 0;
         height: 1px;
-        background: rgba(67, 76, 72, 0.12);
+        background: rgba(0, 0, 0, 0.06);
         content: "";
       }
 
       .brand-mark {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: var(--primary-soft);
-        box-shadow: none;
-        color: var(--md-on-primary-container);
-        font-family: inherit;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 800;
+        display: none;
       }
 
       .brand-copy strong {
-        font-size: 19px;
-        letter-spacing: 0.01em;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
       }
 
       .brand-copy small {
-        margin-top: 3px;
-        font-size: 10px;
-        letter-spacing: 0.12em;
+        display: none;
       }
 
       .header-link {
         min-height: 40px;
-        padding: 0 14px;
-        border-radius: 999px;
-        color: var(--primary);
+        padding: 0 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #ffffff;
+        color: var(--ink);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
       }
 
       .header-link:hover {
-        background: rgba(0, 107, 87, 0.08);
+        border-color: #b9c9e3;
+        background: #f7f9fd;
+        color: var(--primary);
       }
 
       main {
@@ -1197,9 +1193,10 @@
       .control-card,
       .schedule-card {
         padding: 32px;
-        border: 0;
-        border-radius: 28px;
-        background: var(--md-surface-container-low);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: #ffffff;
+        box-shadow: 0 4px 18px rgba(39, 48, 61, 0.045);
       }
 
       .section-kicker {
@@ -1228,9 +1225,9 @@
       .tag-input-wrap {
         min-height: 56px;
         padding: 8px 12px;
-        border-color: #727b77;
-        border-radius: 16px;
-        background: transparent;
+        border-color: var(--line);
+        border-radius: 15px;
+        background: #ffffff;
       }
 
       .tag-input-wrap:focus-within {
@@ -1240,7 +1237,7 @@
 
       .tag {
         padding: 7px 8px 7px 12px;
-        border: 1px solid rgba(0, 81, 67, 0.18);
+        border: 1px solid #c8d7ee;
         background: var(--primary-soft);
         color: var(--md-on-primary-container);
       }
@@ -1256,7 +1253,7 @@
         gap: 2px;
         padding: 4px;
         border-radius: 999px;
-        background: var(--md-surface-container-highest);
+        background: #eeeeee;
       }
 
       .match-mode span,
@@ -1266,22 +1263,23 @@
 
       .match-mode input:checked + span,
       .result-tab.active {
-        background: var(--primary-soft);
-        box-shadow: none;
-        color: var(--md-on-primary-container);
+        background: #ffffff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        color: var(--primary);
       }
 
       .primary-button {
         min-height: 56px;
         border-radius: 999px;
+        border-radius: 14px;
         background: var(--primary);
-        box-shadow: 0 2px 6px rgba(0, 80, 65, 0.18);
+        box-shadow: 0 2px 7px rgba(50, 106, 190, 0.22);
         color: var(--md-on-primary);
       }
 
       .primary-button:hover:not(:disabled) {
-        background: var(--primary);
-        box-shadow: 0 4px 10px rgba(0, 80, 65, 0.24);
+        background: var(--primary-deep);
+        box-shadow: 0 4px 12px rgba(50, 106, 190, 0.28);
       }
 
       .secondary-button,
@@ -1290,8 +1288,9 @@
       }
 
       .text-button {
-        background: var(--md-surface-container-high);
-        color: var(--primary-deep);
+        border: 1px solid var(--line);
+        background: #ffffff;
+        color: var(--ink);
       }
 
       .day-label {
@@ -1306,28 +1305,28 @@
 
       .slot-button {
         min-height: 42px;
-        border: 0;
-        border-radius: 12px;
-        background: var(--md-surface-container-highest);
-        color: #5e6965;
+        border: 1px solid #e4e1e1;
+        border-radius: 10px;
+        background: #fafafa;
+        color: #777777;
       }
 
       .slot-button:hover {
-        border: 0;
-        background: color-mix(in srgb, var(--md-surface-container-highest) 88%, var(--primary));
+        border-color: #9db5db;
+        background: #f3f6fc;
       }
 
       .slot-button[aria-pressed="true"] {
-        border: 0;
+        border: 1px solid #a9bfe0;
         background: var(--primary-soft);
         box-shadow: none;
-        color: var(--md-on-primary-container);
+        color: var(--primary-deep);
       }
 
       .status-card {
-        border: 0;
-        border-radius: 24px;
-        background: var(--md-surface-container);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #ffffff;
       }
 
       .progress-track {
@@ -1353,21 +1352,22 @@
       }
 
       .note-stat {
-        border-radius: 18px;
-        background: var(--md-surface-container-low);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #ffffff;
       }
 
       .course-card {
-        border: 0;
-        border-radius: 24px;
-        background: var(--md-surface-container-low);
-        box-shadow: none;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 3px 12px rgba(39, 48, 61, 0.04);
       }
 
       .course-card:hover {
-        border: 0;
-        background: var(--md-surface-container);
-        box-shadow: none;
+        border-color: #afc2df;
+        background: #ffffff;
+        box-shadow: 0 7px 18px rgba(39, 48, 61, 0.07);
       }
 
       .rank-cell,
@@ -1383,7 +1383,7 @@
       }
 
       .rate-primary {
-        background: #d5f6e9;
+        background: #edf3fc;
       }
 
       .rate-primary.low {
@@ -1395,7 +1395,7 @@
       }
 
       footer {
-        background: var(--md-surface-container-low);
+        background: #ffffff;
       }
 
       @media (max-width: 930px) {
@@ -1453,7 +1453,7 @@
       <form id="search-form" novalidate>
         <section class="search-panel" aria-label="課程搜尋條件">
           <div class="control-card">
-            <p class="section-kicker">02 · Keywords</p>
+            <p class="section-kicker">02 · 關鍵字</p>
             <h2>設定關鍵字</h2>
             <p class="section-help">輸入後按 Enter 或逗號加入；每類最多 8 個。</p>
 
@@ -1509,7 +1509,7 @@
           <div class="schedule-card">
             <div class="schedule-head">
               <div>
-                <p class="section-kicker">01 · Availability</p>
+                <p class="section-kicker">01 · 可上課時段</p>
                 <h2>選擇可上課時段</h2>
                 <p class="section-help">搜尋只會保留完整落在已選時段內的課程。</p>
               </div>
@@ -1547,7 +1547,7 @@
       <section id="results-section" class="results-section" aria-labelledby="results-title">
         <header class="results-header">
           <div>
-            <p class="section-kicker">Ranked results</p>
+            <p class="section-kicker">排序結果</p>
             <h2 id="results-title">搜尋結果</h2>
             <p id="results-summary" class="results-summary"></p>
           </div>
