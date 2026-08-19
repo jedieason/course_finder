@@ -1,0 +1,2061 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="依可上課時段與關鍵字搜尋臺大課程，並以即時推估錄取率由低到高排序。"
+    />
+    <meta name="theme-color" content="#102a2a" />
+    <title>課隙｜臺大課程錄取率搜尋</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17302f;
+        --muted: #657573;
+        --paper: #f5f2ea;
+        --surface: #fffefa;
+        --line: #dce2dd;
+        --primary: #0f6b60;
+        --primary-deep: #0a4c46;
+        --primary-soft: #dff0e9;
+        --accent: #e9b96e;
+        --danger: #bc4d3c;
+        --warning: #a56a19;
+        --shadow: 0 24px 70px rgba(35, 52, 48, 0.1);
+        --radius-xl: 30px;
+        --radius-lg: 22px;
+        --radius-md: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          radial-gradient(circle at 12% 8%, rgba(233, 185, 110, 0.2), transparent 29rem),
+          linear-gradient(180deg, #f8f6f0 0, var(--paper) 42rem, #eff2ec 100%);
+        color: var(--ink);
+        font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 3px solid rgba(15, 107, 96, 0.24);
+        outline-offset: 3px;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+      }
+
+      .site-header {
+        display: flex;
+        min-height: 82px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 39px;
+        height: 39px;
+        place-items: center;
+        border-radius: 13px;
+        background: var(--ink);
+        color: #fff;
+        font-family: Georgia, serif;
+        font-size: 22px;
+        font-style: italic;
+        box-shadow: 0 9px 22px rgba(23, 48, 47, 0.18);
+      }
+
+      .brand-copy {
+        display: grid;
+        line-height: 1.15;
+      }
+
+      .brand-copy strong {
+        font-size: 17px;
+        letter-spacing: 0.08em;
+      }
+
+      .brand-copy small {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .header-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .header-link:hover {
+        color: var(--primary);
+      }
+
+      .hero {
+        position: relative;
+        display: grid;
+        min-height: 380px;
+        align-items: center;
+        padding: 70px 0 86px;
+        overflow: hidden;
+      }
+
+      .hero::after {
+        position: absolute;
+        right: 2%;
+        bottom: 1.5rem;
+        width: 280px;
+        height: 280px;
+        border: 1px solid rgba(15, 107, 96, 0.18);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 42px rgba(15, 107, 96, 0.035),
+          0 0 0 86px rgba(15, 107, 96, 0.025);
+        content: "";
+        pointer-events: none;
+      }
+
+      .hero-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0 0 20px;
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        width: 26px;
+        height: 2px;
+        background: currentColor;
+        content: "";
+      }
+
+      h1 {
+        max-width: 720px;
+        margin: 0;
+        font-family: Georgia, "Noto Serif TC", "Songti TC", serif;
+        font-size: clamp(42px, 7vw, 78px);
+        font-weight: 500;
+        letter-spacing: -0.045em;
+        line-height: 1.08;
+      }
+
+      .hero p:not(.eyebrow) {
+        max-width: 600px;
+        margin: 25px 0 0;
+        color: #536664;
+        font-size: 17px;
+      }
+
+      .hero-note {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 20px;
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .hero-note span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .hero-note span::before {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        content: "";
+      }
+
+      main {
+        padding-bottom: 100px;
+      }
+
+      .search-panel {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        min-width: 0;
+        grid-template-columns: minmax(290px, 0.78fr) minmax(520px, 1.42fr);
+        gap: 18px;
+        margin-top: -20px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.76);
+        border-radius: var(--radius-xl);
+        background: rgba(255, 254, 250, 0.8);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .control-card,
+      .schedule-card {
+        min-width: 0;
+        border: 1px solid rgba(38, 65, 62, 0.1);
+        border-radius: 22px;
+        background: var(--surface);
+      }
+
+      .control-card {
+        display: flex;
+        flex-direction: column;
+        padding: 27px;
+      }
+
+      .schedule-card {
+        padding: 27px;
+      }
+
+      .section-kicker {
+        margin: 0 0 6px;
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h2 {
+        margin-bottom: 8px;
+        font-family: Georgia, "Noto Serif TC", "Songti TC", serif;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .section-help {
+        margin-bottom: 23px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .field + .field {
+        margin-top: 23px;
+      }
+
+      .field-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 9px;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .field-label span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .tag-input-wrap {
+        display: flex;
+        min-height: 51px;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: #fff;
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+      }
+
+      .tag-input-wrap:focus-within {
+        border-color: rgba(15, 107, 96, 0.52);
+        box-shadow: 0 0 0 4px rgba(15, 107, 96, 0.08);
+      }
+
+      .tag-input-wrap input {
+        width: 110px;
+        min-width: 88px;
+        flex: 1;
+        padding: 6px 3px;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        outline: 0;
+        font-size: 13px;
+      }
+
+      .tag-input-wrap input::placeholder {
+        color: #97a19f;
+      }
+
+      #wanted-tags,
+      #excluded-tags {
+        display: contents;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        max-width: 100%;
+        padding: 6px 7px 6px 10px;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary-deep);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .tag.exclude {
+        background: #f6e8e3;
+        color: #914536;
+      }
+
+      .tag span {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tag button {
+        display: grid;
+        width: 19px;
+        height: 19px;
+        padding: 0;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: currentColor;
+        cursor: pointer;
+        opacity: 0.62;
+      }
+
+      .tag button:hover {
+        background: rgba(0, 0, 0, 0.07);
+        opacity: 1;
+      }
+
+      .match-mode {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        padding: 4px;
+        border-radius: 12px;
+        background: #edf0ec;
+      }
+
+      .match-mode label {
+        position: relative;
+        cursor: pointer;
+      }
+
+      .match-mode input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .match-mode span {
+        display: block;
+        padding: 8px 10px;
+        border-radius: 9px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        transition: 150ms ease;
+      }
+
+      .match-mode input:checked + span {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: 0 2px 8px rgba(32, 54, 50, 0.09);
+      }
+
+      .control-bottom {
+        margin-top: auto;
+        padding-top: 29px;
+      }
+
+      .search-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .text-button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        border: 0;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 800;
+        transition: transform 150ms ease, background 150ms ease, opacity 150ms ease;
+      }
+
+      .primary-button {
+        flex: 1;
+        padding: 0 20px;
+        background: var(--ink);
+        color: white;
+        box-shadow: 0 12px 22px rgba(23, 48, 47, 0.17);
+      }
+
+      .primary-button:hover:not(:disabled) {
+        background: var(--primary-deep);
+        transform: translateY(-1px);
+      }
+
+      .primary-button:disabled {
+        cursor: wait;
+        opacity: 0.58;
+      }
+
+      .secondary-button {
+        width: 48px;
+        padding: 0;
+        border: 1px solid #e4c8c1;
+        background: #fff8f5;
+        color: var(--danger);
+      }
+
+      .secondary-button[hidden] {
+        display: none;
+      }
+
+      .fine-print {
+        margin: 13px 0 0;
+        color: #7b8885;
+        font-size: 11px;
+        line-height: 1.55;
+      }
+
+      .schedule-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .schedule-head h2 {
+        margin-bottom: 5px;
+      }
+
+      .schedule-tools {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .selection-count {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .text-button {
+        min-height: 36px;
+        padding: 0 11px;
+        background: #eef1ed;
+        color: var(--ink);
+        font-size: 12px;
+      }
+
+      .text-button:hover {
+        background: #e2e8e2;
+      }
+
+      .schedule-scroll {
+        margin-top: 20px;
+        overflow-x: auto;
+        padding: 0 2px 2px;
+      }
+
+      .schedule-grid {
+        display: grid;
+        min-width: 300px;
+        grid-template-columns: repeat(6, minmax(42px, 1fr));
+        gap: 5px;
+        user-select: none;
+      }
+
+      .day-label {
+        padding: 8px 0 11px;
+        color: #64716e;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .day-label button {
+        padding: 4px 9px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        font-weight: inherit;
+      }
+
+      .day-label button:hover {
+        background: #eef2ed;
+        color: var(--primary);
+      }
+
+      .slot-button {
+        position: relative;
+        min-height: 38px;
+        padding: 0;
+        border: 1px solid #e1e6e1;
+        border-radius: 8px;
+        background: #f9faf7;
+        color: #9aa5a2;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        touch-action: manipulation;
+        transition: 100ms ease;
+      }
+
+      .slot-button:hover {
+        z-index: 1;
+        border-color: #9fbdb5;
+        color: var(--primary);
+      }
+
+      .slot-button[aria-pressed="true"] {
+        border-color: #78aa9e;
+        background: var(--primary-soft);
+        color: var(--primary-deep);
+        box-shadow: inset 0 0 0 1px rgba(15, 107, 96, 0.07);
+      }
+
+      .schedule-legend {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .legend-selected {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .legend-selected::before {
+        width: 11px;
+        height: 11px;
+        border: 1px solid #78aa9e;
+        border-radius: 3px;
+        background: var(--primary-soft);
+        content: "";
+      }
+
+      .status-area {
+        margin-top: 22px;
+      }
+
+      .status-card {
+        display: none;
+        overflow: hidden;
+        border: 1px solid rgba(15, 107, 96, 0.15);
+        border-radius: 18px;
+        background: rgba(255, 254, 250, 0.86);
+      }
+
+      .status-card.visible {
+        display: block;
+      }
+
+      .status-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 18px 20px;
+      }
+
+      .spinner {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 auto;
+        border: 2px solid #ceddd7;
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .status-copy {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .status-copy strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .status-copy span {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .progress-track {
+        height: 4px;
+        background: #e5ebe6;
+      }
+
+      .progress-bar {
+        width: 0;
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), #53a18e);
+        transition: width 180ms ease;
+      }
+
+      .error-card {
+        display: none;
+        margin-top: 14px;
+        padding: 16px 18px;
+        border: 1px solid #efd0c9;
+        border-radius: 15px;
+        background: #fff7f4;
+        color: #834033;
+        font-size: 13px;
+      }
+
+      .error-card.visible {
+        display: block;
+      }
+
+      .results-section {
+        display: none;
+        padding-top: 78px;
+      }
+
+      .results-section.visible {
+        display: block;
+      }
+
+      .results-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        padding-bottom: 23px;
+        border-bottom: 1px solid rgba(23, 48, 47, 0.14);
+      }
+
+      .results-header h2 {
+        margin: 0;
+        font-size: clamp(31px, 5vw, 48px);
+      }
+
+      .results-summary {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .result-tabs {
+        display: flex;
+        gap: 5px;
+        padding: 4px;
+        border-radius: 13px;
+        background: #e8ece7;
+      }
+
+      .result-tab {
+        padding: 9px 13px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .result-tab.active {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: 0 2px 9px rgba(35, 52, 48, 0.09);
+      }
+
+      .result-note {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        margin: 22px 0 28px;
+        overflow: hidden;
+        border: 1px solid rgba(23, 48, 47, 0.1);
+        border-radius: 18px;
+        background: var(--line);
+      }
+
+      .note-stat {
+        padding: 16px 18px;
+        background: rgba(255, 254, 250, 0.9);
+      }
+
+      .note-stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .note-stat strong {
+        display: block;
+        margin-top: 2px;
+        font-size: 15px;
+      }
+
+      .course-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .course-card {
+        display: grid;
+        grid-template-columns: 72px minmax(0, 1fr) 252px;
+        align-items: stretch;
+        overflow: hidden;
+        border: 1px solid rgba(23, 48, 47, 0.11);
+        border-radius: 20px;
+        background: var(--surface);
+        box-shadow: 0 8px 25px rgba(39, 58, 54, 0.035);
+        transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+      }
+
+      .course-card:hover {
+        border-color: rgba(15, 107, 96, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 14px 32px rgba(39, 58, 54, 0.075);
+      }
+
+      .rank-cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid #e8ebe7;
+        color: #87928f;
+        font-family: Georgia, serif;
+        font-size: 20px;
+        font-style: italic;
+      }
+
+      .course-main {
+        min-width: 0;
+        padding: 21px 23px;
+      }
+
+      .course-topline {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 7px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .serial-pill {
+        padding: 3px 7px;
+        border-radius: 6px;
+        background: #eef1ed;
+        color: #4f625f;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .course-name {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0;
+        color: var(--ink);
+        font-size: 19px;
+        font-weight: 800;
+        line-height: 1.35;
+        text-decoration: none;
+      }
+
+      .course-name:hover {
+        color: var(--primary);
+      }
+
+      .course-name svg {
+        flex: 0 0 auto;
+        opacity: 0.55;
+      }
+
+      .course-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px 16px;
+        margin-top: 11px;
+        color: #62716f;
+        font-size: 12px;
+      }
+
+      .course-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .course-meta svg {
+        color: #8c9996;
+      }
+
+      .rate-cell {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: stretch;
+        border-left: 1px solid #e8ebe7;
+      }
+
+      .rate-primary,
+      .metric {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 8px;
+        text-align: center;
+      }
+
+      .rate-primary {
+        background: #eef5f1;
+      }
+
+      .rate-primary strong {
+        color: var(--primary-deep);
+        font-size: 23px;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.04em;
+      }
+
+      .rate-primary.low {
+        background: #faeee9;
+      }
+
+      .rate-primary.low strong {
+        color: var(--danger);
+      }
+
+      .rate-primary.medium {
+        background: #fbf3e3;
+      }
+
+      .rate-primary.medium strong {
+        color: var(--warning);
+      }
+
+      .rate-primary span,
+      .metric span {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .metric + .metric {
+        border-left: 1px solid #ebeeeb;
+      }
+
+      .metric strong {
+        font-size: 17px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .unranked-card .rank-cell {
+        font-family: inherit;
+        font-size: 14px;
+        font-style: normal;
+      }
+
+      .unranked-state {
+        display: flex;
+        grid-column: 1 / -1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: #f2f4f1;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .unranked-state strong {
+        color: var(--ink);
+        font-size: 13px;
+      }
+
+      .unranked-state span {
+        margin-top: 3px;
+        font-size: 10px;
+      }
+
+      .empty-results {
+        padding: 68px 20px;
+        border: 1px dashed #bdc8c4;
+        border-radius: 20px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .empty-results strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--ink);
+        font-size: 18px;
+      }
+
+      .load-more {
+        display: none;
+        width: 100%;
+        margin-top: 14px;
+        padding: 14px 18px;
+        border: 1px solid #cfd8d3;
+        border-radius: 14px;
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .load-more.visible {
+        display: block;
+      }
+
+      .load-more:hover {
+        border-color: #83a79f;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      footer {
+        padding: 25px 0 36px;
+        border-top: 1px solid rgba(23, 48, 47, 0.1);
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      footer a {
+        font-weight: 700;
+        text-underline-offset: 3px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 930px) {
+        .search-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .control-card {
+          order: 2;
+        }
+
+        .schedule-card {
+          order: 1;
+        }
+
+        .course-card {
+          grid-template-columns: 60px minmax(0, 1fr);
+        }
+
+        .rate-cell {
+          grid-column: 2;
+          border-top: 1px solid #e8ebe7;
+          border-left: 0;
+        }
+
+        .rate-primary,
+        .metric {
+          min-height: 76px;
+        }
+      }
+
+      @media (max-width: 650px) {
+        .shell {
+          width: min(100% - 22px, 1180px);
+        }
+
+        .site-header {
+          min-height: 70px;
+        }
+
+        .brand-copy small,
+        .header-link span {
+          display: none;
+        }
+
+        .hero {
+          min-height: 0;
+          padding: 60px 6px 72px;
+        }
+
+        .hero::after {
+          right: -150px;
+          bottom: -20px;
+        }
+
+        h1 {
+          font-size: clamp(41px, 15vw, 60px);
+        }
+
+        .hero p:not(.eyebrow) {
+          font-size: 15px;
+        }
+
+        .search-panel {
+          gap: 10px;
+          margin-top: -15px;
+          padding: 9px;
+          border-radius: 24px;
+        }
+
+        .control-card,
+        .schedule-card {
+          padding: 21px 18px;
+          border-radius: 18px;
+        }
+
+        .schedule-head {
+          display: block;
+        }
+
+        .schedule-tools {
+          justify-content: space-between;
+          margin-top: 12px;
+        }
+
+        .results-section {
+          padding-top: 58px;
+        }
+
+        .results-header {
+          display: block;
+        }
+
+        .result-tabs {
+          margin-top: 18px;
+        }
+
+        .result-tab {
+          flex: 1;
+        }
+
+        .result-note {
+          grid-template-columns: 1fr;
+        }
+
+        .course-card {
+          grid-template-columns: 47px minmax(0, 1fr);
+          border-radius: 16px;
+        }
+
+        .course-main {
+          padding: 18px 16px;
+        }
+
+        .course-name {
+          font-size: 17px;
+        }
+
+        .rank-cell {
+          font-size: 17px;
+        }
+
+        .rate-cell {
+          grid-column: 1 / -1;
+        }
+
+        .rate-primary strong {
+          font-size: 21px;
+        }
+
+        .footer-inner {
+          display: block;
+        }
+
+        .footer-inner span {
+          display: block;
+          margin-top: 7px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="shell site-header">
+      <a class="brand" href="#top" aria-label="課隙首頁">
+        <span class="brand-mark" aria-hidden="true">隙</span>
+        <span class="brand-copy">
+          <strong>課隙</strong>
+          <small>NTU course finder</small>
+        </span>
+      </a>
+      <a class="header-link" href="https://course.ntu.edu.tw/" target="_blank" rel="noreferrer">
+        <span>前往臺大課程網</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        </svg>
+      </a>
+    </header>
+
+    <div id="top" class="shell hero">
+      <div class="hero-copy">
+        <p class="eyebrow">即時課程探索</p>
+        <h1>把時間留下，<br />讓課來找你。</h1>
+        <p>選好你能上課的時段，加入想要與不想要的關鍵字；符合的臺大課程會依推估錄取率由低到高排列。</p>
+        <div class="hero-note" aria-label="資料說明">
+          <span>直接查詢臺大課程網</span>
+          <span>不需登入</span>
+          <span>結果不會永久快取</span>
+        </div>
+      </div>
+    </div>
+
+    <main class="shell">
+      <form id="search-form" novalidate>
+        <section class="search-panel" aria-label="課程搜尋條件">
+          <div class="control-card">
+            <p class="section-kicker">02 · Keywords</p>
+            <h2>設定關鍵字</h2>
+            <p class="section-help">輸入後按 Enter 或逗號加入；每類最多 8 個。</p>
+
+            <div class="field">
+              <label class="field-label" for="wanted-input">想要的關鍵字 <span>課名／教師／流水號</span></label>
+              <div id="wanted-wrap" class="tag-input-wrap">
+                <div id="wanted-tags" aria-live="polite"></div>
+                <input id="wanted-input" type="text" maxlength="40" autocomplete="off" placeholder="例如：資料科學" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="excluded-input">不想要的關鍵字 <span>排除課名</span></label>
+              <div id="excluded-wrap" class="tag-input-wrap">
+                <div id="excluded-tags" aria-live="polite"></div>
+                <input id="excluded-input" type="text" maxlength="40" autocomplete="off" placeholder="例如：專題" />
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">多個想要關鍵字 <span>比對方式</span></div>
+              <div class="match-mode" role="radiogroup" aria-label="想要關鍵字比對方式">
+                <label>
+                  <input type="radio" name="match-mode" value="any" checked />
+                  <span>符合任一</span>
+                </label>
+                <label>
+                  <input type="radio" name="match-mode" value="all" />
+                  <span>全部符合</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="control-bottom">
+              <div class="search-actions">
+                <button id="search-button" class="primary-button" type="submit">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-4-4" />
+                  </svg>
+                  <span>搜尋符合課程</span>
+                </button>
+                <button id="cancel-button" class="secondary-button" type="button" aria-label="取消搜尋" title="取消搜尋" hidden>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p class="fine-print">錄取率 = 剩餘名額 ÷ 已登記人數，最高以 100% 計。這是即時推估，不代表校方正式錄取結果。</p>
+            </div>
+          </div>
+
+          <div class="schedule-card">
+            <div class="schedule-head">
+              <div>
+                <p class="section-kicker">01 · Availability</p>
+                <h2>選擇可上課時段</h2>
+                <p class="section-help">搜尋只會保留完整落在已選時段內的課程。</p>
+              </div>
+              <div class="schedule-tools">
+                <span id="selection-count" class="selection-count">尚未選擇</span>
+                <button id="clear-schedule" class="text-button" type="button">清除</button>
+              </div>
+            </div>
+
+            <div class="schedule-scroll">
+              <div id="schedule-grid" class="schedule-grid" aria-label="星期一至星期六的可上課時段"></div>
+            </div>
+            <div class="schedule-legend">
+              <span class="legend-selected">已選時段</span>
+              <span>可點選或按住拖曳；點星期可整欄選取</span>
+            </div>
+          </div>
+        </section>
+      </form>
+
+      <div class="status-area" aria-live="polite">
+        <div id="status-card" class="status-card" role="status">
+          <div class="status-content">
+            <span class="spinner" aria-hidden="true"></span>
+            <div class="status-copy">
+              <strong id="status-title">正在搜尋課程</strong>
+              <span id="status-detail">準備查詢條件…</span>
+            </div>
+          </div>
+          <div class="progress-track" aria-hidden="true"><div id="progress-bar" class="progress-bar"></div></div>
+        </div>
+        <div id="error-card" class="error-card" role="alert"></div>
+      </div>
+
+      <section id="results-section" class="results-section" aria-labelledby="results-title">
+        <header class="results-header">
+          <div>
+            <p class="section-kicker">Ranked results</p>
+            <h2 id="results-title">搜尋結果</h2>
+            <p id="results-summary" class="results-summary"></p>
+          </div>
+          <div class="result-tabs" role="tablist" aria-label="結果分類">
+            <button id="ranked-tab" class="result-tab active" type="button" role="tab" aria-selected="true">可排名 0</button>
+            <button id="unranked-tab" class="result-tab" type="button" role="tab" aria-selected="false">無法估算 0</button>
+          </div>
+        </header>
+
+        <div class="result-note" aria-label="搜尋摘要">
+          <div class="note-stat"><span>資料學期</span><strong id="semester-stat">—</strong></div>
+          <div class="note-stat"><span>符合課程</span><strong id="matched-stat">0 門</strong></div>
+          <div class="note-stat"><span>資料抓取時間</span><strong id="collected-stat">—</strong></div>
+        </div>
+
+        <div id="course-list" class="course-list"></div>
+        <button id="load-more" class="load-more" type="button">顯示更多</button>
+      </section>
+    </main>
+
+    <footer>
+      <div class="shell footer-inner">
+        <div>課隙 · 非國立臺灣大學官方服務</div>
+        <span>資料來源：<a href="https://course.ntu.edu.tw/" target="_blank" rel="noreferrer">臺大課程網</a> · 內部 API 可能隨時變更</span>
+      </div>
+    </footer>
+
+    <script>
+      "use strict";
+
+      const API_BASE = "https://course.ntu.edu.tw/api";
+      const SEARCH_URL = `${API_BASE}/v1/courses/search/quick?lang=zh-TW`;
+      const INTERVALS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "X", "A", "B", "C", "D"];
+      const DAY_NAMES = ["一", "二", "三", "四", "五", "六"];
+      const PAGE_SIZE = 100;
+      const RENDER_BATCH = 40;
+      const MAX_TAGS = 8;
+      const collator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
+
+      const state = {
+        selectedSlots: new Set(),
+        wanted: [],
+        excluded: [],
+        ranked: [],
+        unranked: [],
+        activeResultType: "ranked",
+        renderedCount: 0,
+        controller: null,
+        isSearching: false,
+        dragValue: null,
+      };
+
+      const elements = {
+        form: document.querySelector("#search-form"),
+        grid: document.querySelector("#schedule-grid"),
+        selectionCount: document.querySelector("#selection-count"),
+        clearSchedule: document.querySelector("#clear-schedule"),
+        wantedInput: document.querySelector("#wanted-input"),
+        wantedTags: document.querySelector("#wanted-tags"),
+        excludedInput: document.querySelector("#excluded-input"),
+        excludedTags: document.querySelector("#excluded-tags"),
+        searchButton: document.querySelector("#search-button"),
+        cancelButton: document.querySelector("#cancel-button"),
+        statusCard: document.querySelector("#status-card"),
+        statusTitle: document.querySelector("#status-title"),
+        statusDetail: document.querySelector("#status-detail"),
+        progressBar: document.querySelector("#progress-bar"),
+        errorCard: document.querySelector("#error-card"),
+        resultsSection: document.querySelector("#results-section"),
+        resultsSummary: document.querySelector("#results-summary"),
+        rankedTab: document.querySelector("#ranked-tab"),
+        unrankedTab: document.querySelector("#unranked-tab"),
+        semesterStat: document.querySelector("#semester-stat"),
+        matchedStat: document.querySelector("#matched-stat"),
+        collectedStat: document.querySelector("#collected-stat"),
+        courseList: document.querySelector("#course-list"),
+        loadMore: document.querySelector("#load-more"),
+      };
+
+      function createSchedule() {
+        DAY_NAMES.forEach((day, dayIndex) => {
+          const label = document.createElement("div");
+          label.className = "day-label";
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = day;
+          button.title = `選取或取消星期${day}全日`;
+          button.dataset.day = String(dayIndex + 1);
+          button.addEventListener("click", () => toggleWholeDay(dayIndex + 1));
+          label.append(button);
+          elements.grid.append(label);
+        });
+
+        INTERVALS.forEach((interval) => {
+          DAY_NAMES.forEach((day, dayIndex) => {
+            const weekday = dayIndex + 1;
+            const key = `${weekday}${interval}`;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "slot-button";
+            button.textContent = interval;
+            button.dataset.slot = key;
+            button.setAttribute("aria-pressed", "false");
+            button.setAttribute("aria-label", `星期${day}第 ${interval} 節`);
+            button.addEventListener("pointerdown", (event) => {
+              if (event.button !== 0 && event.pointerType === "mouse") return;
+              event.preventDefault();
+              const nextValue = !state.selectedSlots.has(key);
+              state.dragValue = nextValue;
+              setSlot(key, nextValue);
+            });
+            button.addEventListener("pointerenter", () => {
+              if (state.dragValue !== null) setSlot(key, state.dragValue);
+            });
+            button.addEventListener("keydown", (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setSlot(key, !state.selectedSlots.has(key));
+              }
+            });
+            elements.grid.append(button);
+          });
+        });
+
+        window.addEventListener("pointerup", () => { state.dragValue = null; });
+        window.addEventListener("pointercancel", () => { state.dragValue = null; });
+      }
+
+      function setSlot(key, selected, sync = true) {
+        if (selected) state.selectedSlots.add(key);
+        else state.selectedSlots.delete(key);
+        const button = elements.grid.querySelector(`[data-slot="${CSS.escape(key)}"]`);
+        if (button) button.setAttribute("aria-pressed", String(selected));
+        updateSelectionCount();
+        if (sync) syncUrl();
+      }
+
+      function toggleWholeDay(weekday) {
+        const dayKeys = INTERVALS.map((interval) => `${weekday}${interval}`);
+        const shouldSelect = dayKeys.some((key) => !state.selectedSlots.has(key));
+        dayKeys.forEach((key) => setSlot(key, shouldSelect, false));
+        syncUrl();
+      }
+
+      function updateSelectionCount() {
+        const count = state.selectedSlots.size;
+        elements.selectionCount.textContent = count ? `已選 ${count} 個時段` : "尚未選擇";
+      }
+
+      function splitTagInput(value) {
+        return value
+          .split(/[，,\n]/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function addTags(type, values) {
+        const target = state[type];
+        for (const value of values) {
+          if (target.length >= MAX_TAGS) break;
+          const normalized = value.slice(0, 40).trim();
+          if (normalized && !target.some((tag) => tag.toLocaleLowerCase("zh-Hant") === normalized.toLocaleLowerCase("zh-Hant"))) {
+            target.push(normalized);
+          }
+        }
+        renderTags(type);
+        syncUrl();
+      }
+
+      function removeTag(type, index) {
+        state[type].splice(index, 1);
+        renderTags(type);
+        syncUrl();
+      }
+
+      function renderTags(type) {
+        const container = type === "wanted" ? elements.wantedTags : elements.excludedTags;
+        container.replaceChildren();
+        state[type].forEach((value, index) => {
+          const tag = document.createElement("span");
+          tag.className = `tag${type === "excluded" ? " exclude" : ""}`;
+          const text = document.createElement("span");
+          text.textContent = value;
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.setAttribute("aria-label", `移除關鍵字 ${value}`);
+          remove.textContent = "×";
+          remove.addEventListener("click", () => removeTag(type, index));
+          tag.append(text, remove);
+          container.append(tag);
+        });
+      }
+
+      function attachTagInput(input, type) {
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === "," || event.key === "，") {
+            event.preventDefault();
+            const values = splitTagInput(input.value);
+            if (values.length) addTags(type, values);
+            input.value = "";
+          } else if (event.key === "Backspace" && !input.value && state[type].length) {
+            removeTag(type, state[type].length - 1);
+          }
+        });
+        input.addEventListener("blur", () => {
+          const values = splitTagInput(input.value);
+          if (values.length) addTags(type, values);
+          input.value = "";
+        });
+        input.addEventListener("paste", (event) => {
+          const text = event.clipboardData?.getData("text") || "";
+          if (/[，,\n]/.test(text)) {
+            event.preventDefault();
+            addTags(type, splitTagInput(text));
+            input.value = "";
+          }
+        });
+      }
+
+      function selectedMatchMode() {
+        return document.querySelector('input[name="match-mode"]:checked')?.value || "any";
+      }
+
+      function buildTimeMatrix() {
+        const matrix = Array.from({ length: 6 }, () => []);
+        state.selectedSlots.forEach((key) => {
+          const weekday = Number(key[0]);
+          const interval = key.slice(1);
+          if (Number.isInteger(weekday) && weekday >= 1 && weekday <= 6 && INTERVALS.includes(interval)) {
+            matrix[weekday - 1].push(interval);
+          }
+        });
+        matrix.forEach((day) => day.sort((a, b) => INTERVALS.indexOf(a) - INTERVALS.indexOf(b)));
+        return matrix;
+      }
+
+      function buildQuery(keyword) {
+        return {
+          keyword,
+          time: buildTimeMatrix(),
+          timeStrictMatch: true,
+          isFullYear: null,
+          excludedKeywords: [...state.excluded],
+          enrollMethods: [],
+          isEnglishTaught: false,
+          isDistanceLearning: false,
+          hasChanged: false,
+          isAdditionalCourse: false,
+          noPrerequisite: false,
+          isCanceled: false,
+          isIntensive: false,
+          isPrecise: true,
+          type: "quick",
+          departments: [],
+          isCompulsory: null,
+        };
+      }
+
+      class HttpError extends Error {
+        constructor(status, message) {
+          super(message);
+          this.name = "HttpError";
+          this.status = status;
+        }
+      }
+
+      function abortError() {
+        return new DOMException("搜尋已取消", "AbortError");
+      }
+
+      function wait(ms, signal) {
+        return new Promise((resolve, reject) => {
+          if (signal?.aborted) return reject(abortError());
+          const timer = setTimeout(resolve, ms);
+          signal?.addEventListener("abort", () => {
+            clearTimeout(timer);
+            reject(abortError());
+          }, { once: true });
+        });
+      }
+
+      async function fetchJson(url, options = {}, retries = 5) {
+        let lastError;
+        for (let attempt = 1; attempt <= retries; attempt += 1) {
+          if (options.signal?.aborted) throw abortError();
+          try {
+            const response = await fetch(url, {
+              ...options,
+              headers: {
+                accept: "application/json",
+                ...(options.body ? { "content-type": "application/json" } : {}),
+                ...(options.headers || {}),
+              },
+            });
+            const text = await response.text();
+            if (!response.ok) {
+              const error = new HttpError(response.status, `HTTP ${response.status}: ${text.slice(0, 180)}`);
+              if (response.status < 500 && response.status !== 429) throw error;
+              throw error;
+            }
+            try {
+              return JSON.parse(text);
+            } catch {
+              throw new Error("API 回傳了無法解析的資料格式");
+            }
+          } catch (error) {
+            if (error.name === "AbortError") throw error;
+            lastError = error;
+            const retryable = !(error instanceof HttpError) || error.status === 429 || error.status >= 500;
+            if (!retryable || attempt === retries) throw error;
+            await wait(400 * attempt, options.signal);
+          }
+        }
+        throw lastError;
+      }
+
+      async function mapConcurrent(items, concurrency, mapper, onProgress) {
+        const output = new Array(items.length);
+        let cursor = 0;
+        let completed = 0;
+        const workers = Array.from({ length: Math.min(concurrency, Math.max(items.length, 1)) }, async () => {
+          while (true) {
+            const index = cursor;
+            cursor += 1;
+            if (index >= items.length) return;
+            output[index] = await mapper(items[index], index);
+            completed += 1;
+            onProgress?.(completed, items.length);
+          }
+        });
+        await Promise.all(workers);
+        return output;
+      }
+
+      function updateProgress(title, detail, percent) {
+        elements.statusTitle.textContent = title;
+        elements.statusDetail.textContent = detail;
+        elements.progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+      }
+
+      async function fetchSearchSet(keyword, signal, keywordIndex, keywordCount) {
+        const query = buildQuery(keyword);
+        const fetchPage = (pageIndex) => fetchJson(SEARCH_URL, {
+          method: "POST",
+          body: JSON.stringify({ query, batchSize: PAGE_SIZE, pageIndex, sorting: "correlation" }),
+          signal,
+        });
+
+        updateProgress(
+          "正在比對課程條件",
+          keyword ? `關鍵字「${keyword}」：讀取第 1 頁` : "讀取課程清單第 1 頁",
+          4 + (keywordIndex / keywordCount) * 25,
+        );
+        const firstPage = await fetchPage(0);
+        const totalCount = Number(firstPage.totalCount);
+        const pageCount = Math.ceil(totalCount / PAGE_SIZE);
+        const pageIndexes = Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) => index + 1);
+        const otherPages = await mapConcurrent(pageIndexes, 4, fetchPage, (completed, total) => {
+          const keywordProgress = total ? completed / total : 1;
+          const overall = (keywordIndex + keywordProgress) / keywordCount;
+          updateProgress(
+            "正在比對課程條件",
+            keyword ? `關鍵字「${keyword}」：已讀取 ${completed + 1} / ${pageCount} 頁` : `已讀取 ${completed + 1} / ${pageCount} 頁`,
+            5 + overall * 25,
+          );
+        });
+        const courses = [firstPage, ...otherPages].flatMap((page) => Array.isArray(page.courses) ? page.courses : []);
+        if (!Number.isFinite(totalCount) || courses.length !== totalCount) {
+          throw new Error(`課程筆數不一致（取得 ${courses.length} 筆，API 回報 ${firstPage.totalCount} 筆）`);
+        }
+        if (new Set(courses.map((course) => course.id)).size !== courses.length) {
+          throw new Error("API 回傳了重複的課程 UUID，已停止排序以避免錯誤結果");
+        }
+        return courses;
+      }
+
+      function combineCourseSets(courseSets, mode) {
+        if (courseSets.length === 1) return courseSets[0];
+        const maps = courseSets.map((courses) => new Map(courses.map((course) => [course.id, course])));
+        if (mode === "all") {
+          return courseSets[0].filter((course) => maps.every((map) => map.has(course.id)));
+        }
+        const union = new Map();
+        courseSets.flat().forEach((course) => union.set(course.id, course));
+        return [...union.values()];
+      }
+
+      function estimateAdmissionRate(status) {
+        const remaining = Number(status?.remaining);
+        const registered = Number(status?.registered);
+        if (!Number.isFinite(remaining) || !Number.isFinite(registered) || registered <= 0) return null;
+        return Math.min(1, Math.max(0, remaining / registered));
+      }
+
+      function compareRanked(a, b) {
+        return a.estimatedAdmissionRate - b.estimatedAdmissionRate
+          || Number(b.enrollmentStatus.registered) - Number(a.enrollmentStatus.registered)
+          || Number(a.enrollmentStatus.remaining) - Number(b.enrollmentStatus.remaining)
+          || collator.compare(a.name || "", b.name || "")
+          || collator.compare(a.serial || "", b.serial || "");
+      }
+
+      async function fetchStatuses(courses, signal) {
+        return mapConcurrent(courses, 15, async (course) => {
+          try {
+            const enrollmentStatus = await fetchJson(`${API_BASE}/v1/courses/enroll-status/${encodeURIComponent(course.id)}`, { signal });
+            return { ...course, enrollmentStatus, estimatedAdmissionRate: estimateAdmissionRate(enrollmentStatus), statusError: null };
+          } catch (error) {
+            if (error.name === "AbortError") throw error;
+            return { ...course, enrollmentStatus: null, estimatedAdmissionRate: null, statusError: error.message };
+          }
+        }, (completed, total) => {
+          updateProgress(
+            "正在取得即時登記狀態",
+            `已完成 ${completed.toLocaleString("zh-TW")} / ${total.toLocaleString("zh-TW")} 門課`,
+            32 + (completed / Math.max(total, 1)) * 65,
+          );
+        });
+      }
+
+      function friendlyError(error) {
+        if (error instanceof HttpError) {
+          if (error.status === 429) return "臺大課程網目前請求較多，已重試但仍受到流量限制。請稍後再試。";
+          if (error.status >= 500) return "臺大課程網暫時無法回應。請稍後再試。";
+          return `臺大課程網拒絕了查詢（HTTP ${error.status}）。API 格式可能已更新。`;
+        }
+        if (error instanceof TypeError) {
+          return "無法連線到臺大課程網。請確認網路連線，或稍後重試。";
+        }
+        return error.message || "搜尋時發生未預期的錯誤。";
+      }
+
+      function setSearching(searching) {
+        state.isSearching = searching;
+        elements.searchButton.disabled = searching;
+        elements.searchButton.querySelector("span").textContent = searching ? "搜尋進行中…" : "搜尋符合課程";
+        elements.cancelButton.hidden = !searching;
+        elements.statusCard.classList.toggle("visible", searching);
+        if (!searching) elements.progressBar.style.width = "0%";
+      }
+
+      async function runSearch(event) {
+        event.preventDefault();
+        if (state.isSearching) return;
+
+        const pendingWanted = splitTagInput(elements.wantedInput.value);
+        const pendingExcluded = splitTagInput(elements.excludedInput.value);
+        if (pendingWanted.length) addTags("wanted", pendingWanted);
+        if (pendingExcluded.length) addTags("excluded", pendingExcluded);
+        elements.wantedInput.value = "";
+        elements.excludedInput.value = "";
+
+        if (!state.selectedSlots.size && !state.wanted.length && !state.excluded.length) {
+          showError("請至少選一個時段，或加入一個關鍵字，再開始搜尋。這能避免一次向臺大課程網查詢所有課程狀態。 ");
+          return;
+        }
+
+        state.controller = new AbortController();
+        setSearching(true);
+        hideError();
+        updateProgress("正在準備搜尋", "建立時段與關鍵字條件…", 2);
+
+        try {
+          const keywords = state.wanted.length ? [...state.wanted] : [""];
+          const mode = selectedMatchMode();
+          const courseSets = [];
+          for (let index = 0; index < keywords.length; index += 1) {
+            courseSets.push(await fetchSearchSet(keywords[index], state.controller.signal, index, keywords.length));
+          }
+          const courses = combineCourseSets(courseSets, mode);
+          if (!courses.length) {
+            finishResults([], [], new Date(), []);
+            return;
+          }
+
+          updateProgress("找到符合條件的課程", `共 ${courses.length.toLocaleString("zh-TW")} 門，開始讀取即時名額`, 31);
+          const rows = await fetchStatuses(courses, state.controller.signal);
+          const ranked = rows.filter((row) => row.estimatedAdmissionRate !== null).sort(compareRanked);
+          const unranked = rows
+            .filter((row) => row.estimatedAdmissionRate === null)
+            .sort((a, b) => Number(Boolean(a.statusError)) - Number(Boolean(b.statusError)) || collator.compare(a.name || "", b.name || ""));
+          updateProgress("排序完成", `已整理 ${rows.length.toLocaleString("zh-TW")} 門課程`, 100);
+          finishResults(ranked, unranked, new Date(), courses);
+        } catch (error) {
+          if (error.name !== "AbortError") showError(friendlyError(error));
+        } finally {
+          setSearching(false);
+          state.controller = null;
+        }
+      }
+
+      function finishResults(ranked, unranked, collectedAt, courses) {
+        state.ranked = ranked;
+        state.unranked = unranked;
+        state.activeResultType = "ranked";
+        const semesters = [...new Set(courses.map((course) => course.semester).filter(Boolean))].sort(collator.compare);
+        const failed = unranked.filter((course) => course.statusError).length;
+        const noRegistration = unranked.length - failed;
+        const total = ranked.length + unranked.length;
+
+        elements.rankedTab.textContent = `可排名 ${ranked.length.toLocaleString("zh-TW")}`;
+        elements.unrankedTab.textContent = `無法估算 ${unranked.length.toLocaleString("zh-TW")}`;
+        elements.semesterStat.textContent = semesters.length ? semesters.join("、") : "—";
+        elements.matchedStat.textContent = `${total.toLocaleString("zh-TW")} 門`;
+        elements.collectedStat.textContent = new Intl.DateTimeFormat("zh-TW", {
+          month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
+        }).format(collectedAt);
+        const unrankedReasons = [
+          noRegistration ? `${noRegistration.toLocaleString("zh-TW")} 門因無人登記` : "",
+          failed ? `${failed.toLocaleString("zh-TW")} 門狀態讀取失敗` : "",
+        ].filter(Boolean).join("、");
+        elements.resultsSummary.textContent = total
+          ? `依未四捨五入的推估錄取率排序；${unrankedReasons ? `${unrankedReasons}，不列入排名。` : "所有符合課程皆可排名。"}`
+          : "沒有找到符合目前時段與關鍵字的課程。";
+        elements.resultsSection.classList.add("visible");
+        activateResultTab("ranked");
+        elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function activateResultTab(type) {
+        state.activeResultType = type;
+        state.renderedCount = 0;
+        const rankedActive = type === "ranked";
+        elements.rankedTab.classList.toggle("active", rankedActive);
+        elements.rankedTab.setAttribute("aria-selected", String(rankedActive));
+        elements.unrankedTab.classList.toggle("active", !rankedActive);
+        elements.unrankedTab.setAttribute("aria-selected", String(!rankedActive));
+        elements.courseList.replaceChildren();
+        renderNextBatch();
+      }
+
+      function renderNextBatch() {
+        const list = state.activeResultType === "ranked" ? state.ranked : state.unranked;
+        if (!list.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-results";
+          empty.innerHTML = state.activeResultType === "ranked"
+            ? "<strong>目前沒有可排名的課程</strong>試著增加可上課時段，或調整關鍵字。"
+            : "<strong>沒有無法估算的課程</strong>每門符合課程目前都有可用的登記資料。";
+          elements.courseList.append(empty);
+          elements.loadMore.classList.remove("visible");
+          return;
+        }
+
+        const end = Math.min(state.renderedCount + RENDER_BATCH, list.length);
+        const fragment = document.createDocumentFragment();
+        for (let index = state.renderedCount; index < end; index += 1) {
+          fragment.append(createCourseCard(list[index], index));
+        }
+        elements.courseList.append(fragment);
+        state.renderedCount = end;
+        const hasMore = end < list.length;
+        elements.loadMore.classList.toggle("visible", hasMore);
+        if (hasMore) elements.loadMore.textContent = `顯示更多（尚有 ${(list.length - end).toLocaleString("zh-TW")} 門）`;
+      }
+
+      function safeNumber(value) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number.toLocaleString("zh-TW") : "—";
+      }
+
+      function teacherName(teacher) {
+        if (Array.isArray(teacher)) return teacher.map((item) => item?.name).filter(Boolean).join("、") || "未公布";
+        return teacher?.name || "未公布";
+      }
+
+      function formatSchedules(schedules) {
+        if (!Array.isArray(schedules) || !schedules.length) return "時間未定";
+        return schedules.map((schedule) => {
+          const day = DAY_NAMES[Number(schedule.weekday) - 1] || `週${schedule.weekday}`;
+          const intervals = Array.isArray(schedule.intervals) ? schedule.intervals.join("、") : "";
+          return `${day} ${intervals}`.trim();
+        }).join("；");
+      }
+
+      function formatClassrooms(schedules) {
+        if (!Array.isArray(schedules)) return "";
+        return [...new Set(schedules.map((schedule) => schedule.classroom?.name).filter(Boolean))].join("、");
+      }
+
+      function courseUrl(course) {
+        const semester = encodeURIComponent(course.semester || "");
+        const serial = encodeURIComponent(course.serial || "");
+        return `https://course.ntu.edu.tw/courses/${semester}/${serial}`;
+      }
+
+      function svgIcon(path) {
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${path}</svg>`;
+      }
+
+      function createCourseCard(course, index) {
+        const card = document.createElement("article");
+        card.className = `course-card${state.activeResultType === "unranked" ? " unranked-card" : ""}`;
+
+        const rank = document.createElement("div");
+        rank.className = "rank-cell";
+        rank.textContent = state.activeResultType === "ranked" ? String(index + 1).padStart(2, "0") : "—";
+
+        const main = document.createElement("div");
+        main.className = "course-main";
+        const topline = document.createElement("div");
+        topline.className = "course-topline";
+        const serial = document.createElement("span");
+        serial.className = "serial-pill";
+        serial.textContent = course.serial ? `#${course.serial}` : "無流水號";
+        const department = document.createElement("span");
+        department.textContent = course.hostDepartment || "開課單位未定";
+        const code = document.createElement("span");
+        code.textContent = [course.identifier, course.class ? `班 ${course.class}` : ""].filter(Boolean).join(" · ");
+        const semester = document.createElement("span");
+        semester.textContent = course.semester || "學期未定";
+        topline.append(serial, department, code, semester);
+
+        const name = document.createElement("a");
+        name.className = "course-name";
+        name.href = courseUrl(course);
+        name.target = "_blank";
+        name.rel = "noreferrer";
+        name.textContent = course.name || "未命名課程";
+        name.insertAdjacentHTML("beforeend", svgIcon('<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'));
+
+        const meta = document.createElement("div");
+        meta.className = "course-meta";
+        const teacher = document.createElement("span");
+        teacher.innerHTML = svgIcon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>');
+        teacher.append(document.createTextNode(teacherName(course.teacher)));
+        const time = document.createElement("span");
+        time.innerHTML = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>');
+        time.append(document.createTextNode(formatSchedules(course.schedules)));
+        meta.append(teacher, time);
+        const classroomText = formatClassrooms(course.schedules);
+        if (classroomText) {
+          const classroom = document.createElement("span");
+          classroom.innerHTML = svgIcon('<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/>');
+          classroom.append(document.createTextNode(classroomText));
+          meta.append(classroom);
+        }
+        const credits = document.createElement("span");
+        credits.innerHTML = svgIcon('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5Z"/><path d="M4 5.5v16"/>');
+        credits.append(document.createTextNode(`${safeNumber(course.credits)} 學分`));
+        meta.append(credits);
+        if (course.enrollmentStatus) {
+          const enrolled = document.createElement("span");
+          enrolled.innerHTML = svgIcon('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>');
+          enrolled.append(document.createTextNode(`已選上 ${safeNumber(course.enrollmentStatus.enrolled)}`));
+          meta.append(enrolled);
+        }
+        main.append(topline, name, meta);
+
+        const metrics = document.createElement("div");
+        metrics.className = "rate-cell";
+        if (state.activeResultType === "ranked") {
+          const percent = course.estimatedAdmissionRate * 100;
+          const rate = document.createElement("div");
+          rate.className = `rate-primary${percent <= 25 ? " low" : percent <= 60 ? " medium" : ""}`;
+          rate.innerHTML = `<strong>${percent.toLocaleString("zh-TW", { maximumFractionDigits: 1 })}%</strong><span>推估錄取率</span>`;
+          const remaining = document.createElement("div");
+          remaining.className = "metric";
+          remaining.innerHTML = `<strong>${safeNumber(course.enrollmentStatus?.remaining)}</strong><span>剩餘名額</span>`;
+          const registered = document.createElement("div");
+          registered.className = "metric";
+          registered.innerHTML = `<strong>${safeNumber(course.enrollmentStatus?.registered)}</strong><span>已登記</span>`;
+          metrics.append(rate, remaining, registered);
+        } else {
+          const stateBlock = document.createElement("div");
+          stateBlock.className = "unranked-state";
+          if (course.statusError) {
+            stateBlock.innerHTML = "<strong>狀態讀取失敗</strong><span>可稍後重新搜尋</span>";
+          } else {
+            stateBlock.innerHTML = `<strong>目前無人登記</strong><span>剩餘名額 ${safeNumber(course.enrollmentStatus?.remaining)} · 已選上 ${safeNumber(course.enrollmentStatus?.enrolled)}</span>`;
+          }
+          metrics.append(stateBlock);
+        }
+
+        card.append(rank, main, metrics);
+        return card;
+      }
+
+      function showError(message) {
+        elements.errorCard.textContent = message;
+        elements.errorCard.classList.add("visible");
+      }
+
+      function hideError() {
+        elements.errorCard.textContent = "";
+        elements.errorCard.classList.remove("visible");
+      }
+
+      function syncUrl() {
+        const params = new URLSearchParams();
+        if (state.selectedSlots.size) params.set("t", [...state.selectedSlots].sort((a, b) => {
+          const dayDiff = Number(a[0]) - Number(b[0]);
+          return dayDiff || INTERVALS.indexOf(a.slice(1)) - INTERVALS.indexOf(b.slice(1));
+        }).join(","));
+        if (state.wanted.length) params.set("k", state.wanted.join(","));
+        if (state.excluded.length) params.set("ek", state.excluded.join(","));
+        if (selectedMatchMode() === "all") params.set("km", "all");
+        const query = params.toString();
+        history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
+      }
+
+      function restoreFromUrl() {
+        const params = new URLSearchParams(location.search);
+        const slots = (params.get("t") || "").split(",").filter(Boolean);
+        slots.forEach((key) => {
+          const weekday = Number(key[0]);
+          const interval = key.slice(1);
+          if (weekday >= 1 && weekday <= 6 && INTERVALS.includes(interval)) setSlot(key, true, false);
+        });
+        state.wanted = splitTagInput(params.get("k") || "").slice(0, MAX_TAGS);
+        state.excluded = splitTagInput(params.get("ek") || "").slice(0, MAX_TAGS);
+        renderTags("wanted");
+        renderTags("excluded");
+        if (params.get("km") === "all") {
+          const allMode = document.querySelector('input[name="match-mode"][value="all"]');
+          if (allMode) allMode.checked = true;
+        }
+        updateSelectionCount();
+      }
+
+      createSchedule();
+      restoreFromUrl();
+      attachTagInput(elements.wantedInput, "wanted");
+      attachTagInput(elements.excludedInput, "excluded");
+      elements.form.addEventListener("submit", runSearch);
+      elements.clearSchedule.addEventListener("click", () => {
+        [...state.selectedSlots].forEach((key) => setSlot(key, false, false));
+        syncUrl();
+      });
+      elements.cancelButton.addEventListener("click", () => state.controller?.abort());
+      elements.rankedTab.addEventListener("click", () => activateResultTab("ranked"));
+      elements.unrankedTab.addEventListener("click", () => activateResultTab("unranked"));
+      elements.loadMore.addEventListener("click", renderNextBatch);
+      document.querySelectorAll('input[name="match-mode"]').forEach((input) => input.addEventListener("change", syncUrl));
+    </script>
+  </body>
+</html>
