@@ -642,12 +642,6 @@
         font-size: clamp(31px, 5vw, 48px);
       }
 
-      .results-summary {
-        margin: 7px 0 0;
-        color: var(--muted);
-        font-size: 13px;
-      }
-
       .result-controls {
         display: flex;
         flex-wrap: wrap;
@@ -1665,7 +1659,6 @@
           <div>
             <p class="section-kicker">排序結果</p>
             <h2 id="results-title">搜尋結果</h2>
-            <p id="results-summary" class="results-summary"></p>
           </div>
           <div class="result-controls">
             <div class="sort-control">
@@ -1674,10 +1667,6 @@
                 <button id="popularity-sort" class="result-tab active" type="button" aria-pressed="true">熱度</button>
                 <button id="grade-sort" class="result-tab" type="button" aria-pressed="false">A+ 率</button>
               </div>
-            </div>
-            <div class="result-tabs" role="tablist" aria-label="結果分類">
-              <button id="ranked-tab" class="result-tab active" type="button" role="tab" aria-selected="true">可排名 0</button>
-              <button id="unranked-tab" class="result-tab" type="button" role="tab" aria-selected="false">無法估算 0</button>
             </div>
           </div>
         </header>
@@ -1717,12 +1706,8 @@
         selectedSlots: new Set(),
         wanted: [],
         excluded: [],
-        ranked: [],
-        unranked: [],
-        activeResultType: "ranked",
+        results: [],
         sortMode: "popularity",
-        resultTotal: 0,
-        unrankedReasons: "",
         renderedCount: 0,
         controller: null,
         isSearching: false,
@@ -1750,11 +1735,8 @@
         progressBar: document.querySelector("#progress-bar"),
         errorCard: document.querySelector("#error-card"),
         resultsSection: document.querySelector("#results-section"),
-        resultsSummary: document.querySelector("#results-summary"),
         popularitySort: document.querySelector("#popularity-sort"),
         gradeSort: document.querySelector("#grade-sort"),
-        rankedTab: document.querySelector("#ranked-tab"),
-        unrankedTab: document.querySelector("#unranked-tab"),
         semesterStat: document.querySelector("#semester-stat"),
         matchedStat: document.querySelector("#matched-stat"),
         collectedStat: document.querySelector("#collected-stat"),
@@ -2244,8 +2226,8 @@
 
       function compareRanked(a, b) {
         return a.estimatedAdmissionRate - b.estimatedAdmissionRate
-          || Number(b.enrollmentStatus.registered) - Number(a.enrollmentStatus.registered)
-          || Number(a.enrollmentStatus.remaining) - Number(b.enrollmentStatus.remaining)
+          || Number(b.enrollmentStatus?.registered || 0) - Number(a.enrollmentStatus?.registered || 0)
+          || Number(a.enrollmentStatus?.remaining || 0) - Number(b.enrollmentStatus?.remaining || 0)
           || collator.compare(a.name || "", b.name || "")
           || collator.compare(a.serial || "", b.serial || "");
       }
@@ -2319,7 +2301,7 @@
           }
           const courses = combineCourseSets(courseSets, mode);
           if (!courses.length) {
-            finishResults([], [], new Date(), []);
+            finishResults([], new Date(), []);
             return;
           }
 
@@ -2327,12 +2309,12 @@
           const rows = await fetchStatuses(courses, state.controller.signal);
           updateProgress("正在比對歷史成績", "整理課程與教師的 A+ 率紀錄", 98);
           await loadGradeData();
-          const ranked = rows.filter((row) => row.estimatedAdmissionRate !== null).sort(compareRanked);
-          const unranked = rows
-            .filter((row) => row.estimatedAdmissionRate === null)
-            .sort((a, b) => Number(Boolean(a.statusError)) - Number(Boolean(b.statusError)) || collator.compare(a.name || "", b.name || ""));
+          const results = rows.map((row) => row.estimatedAdmissionRate === null
+            ? { ...row, estimatedAdmissionRate: 1, admissionRateAssumed: true }
+            : row
+          ).sort(compareRanked);
           updateProgress("排序完成", `已整理 ${rows.length.toLocaleString("zh-TW")} 門課程`, 100);
-          finishResults(ranked, unranked, new Date(), courses);
+          finishResults(results, new Date(), courses);
         } catch (error) {
           if (error.name !== "AbortError") showError(friendlyError(error));
         } finally {
@@ -2341,56 +2323,27 @@
         }
       }
 
-      function finishResults(ranked, unranked, collectedAt, courses) {
-        state.ranked = ranked;
-        state.unranked = unranked;
-        state.activeResultType = "ranked";
+      function finishResults(results, collectedAt, courses) {
+        state.results = results;
         state.sortMode = "popularity";
         const semesters = [...new Set(courses.map((course) => course.semester).filter(Boolean))].sort(collator.compare);
-        const failed = unranked.filter((course) => course.statusError).length;
-        const noRegistration = unranked.length - failed;
-        const total = ranked.length + unranked.length;
+        const total = results.length;
 
-        elements.rankedTab.textContent = `可排名 ${ranked.length.toLocaleString("zh-TW")}`;
-        elements.unrankedTab.textContent = `無法估算 ${unranked.length.toLocaleString("zh-TW")}`;
         elements.semesterStat.textContent = semesters.length ? semesters.join("、") : "—";
         elements.matchedStat.textContent = `${total.toLocaleString("zh-TW")} 門`;
         elements.collectedStat.textContent = new Intl.DateTimeFormat("zh-TW", {
           month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
         }).format(collectedAt);
-        const unrankedReasons = [
-          noRegistration ? `${noRegistration.toLocaleString("zh-TW")} 門因無人登記` : "",
-          failed ? `${failed.toLocaleString("zh-TW")} 門狀態讀取失敗` : "",
-        ].filter(Boolean).join("、");
-        state.resultTotal = total;
-        state.unrankedReasons = unrankedReasons;
         elements.resultsSection.classList.add("visible");
         setSortMode("popularity", false);
-        activateResultTab("ranked");
+        resetResultsList();
         elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
-      function activateResultTab(type) {
-        state.activeResultType = type;
+      function resetResultsList() {
         state.renderedCount = 0;
-        const rankedActive = type === "ranked";
-        elements.rankedTab.classList.toggle("active", rankedActive);
-        elements.rankedTab.setAttribute("aria-selected", String(rankedActive));
-        elements.unrankedTab.classList.toggle("active", !rankedActive);
-        elements.unrankedTab.setAttribute("aria-selected", String(!rankedActive));
         elements.courseList.replaceChildren();
         renderNextBatch();
-      }
-
-      function updateResultsSummary() {
-        if (!state.resultTotal) {
-          elements.resultsSummary.textContent = "沒有找到符合目前時段與關鍵字的課程。";
-          return;
-        }
-        const suffix = state.unrankedReasons ? `${state.unrankedReasons}，不列入熱度排名。` : "所有符合課程皆可計算熱度。";
-        elements.resultsSummary.textContent = state.sortMode === "grade"
-          ? `依歷史 A+ 率由高到低排序，無紀錄者置後；${suffix}`
-          : `依未四捨五入的中簽率由低到高排序；${suffix}`;
       }
 
       function setSortMode(mode, rerender = true) {
@@ -2400,19 +2353,16 @@
         elements.popularitySort.setAttribute("aria-pressed", String(popularityActive));
         elements.gradeSort.classList.toggle("active", !popularityActive);
         elements.gradeSort.setAttribute("aria-pressed", String(!popularityActive));
-        updateResultsSummary();
-        if (rerender) activateResultTab(state.activeResultType);
+        if (rerender) resetResultsList();
       }
 
       function renderNextBatch() {
-        const source = state.activeResultType === "ranked" ? state.ranked : state.unranked;
+        const source = state.results;
         const list = state.sortMode === "grade" ? [...source].sort(compareByGrade) : source;
         if (!list.length) {
           const empty = document.createElement("div");
           empty.className = "empty-results";
-          empty.innerHTML = state.activeResultType === "ranked"
-            ? "<strong>目前沒有可排名的課程</strong>試著增加可上課時段，或調整關鍵字。"
-            : "<strong>沒有無法估算的課程</strong>每門符合課程目前都有可用的登記資料。";
+          empty.innerHTML = "<strong>沒有符合條件的課程</strong>試著增加可上課時段，或調整關鍵字。";
           elements.courseList.append(empty);
           elements.loadMore.classList.remove("visible");
           return;
@@ -2517,11 +2467,11 @@
 
       function createCourseCard(course, index) {
         const card = document.createElement("article");
-        card.className = `course-card${state.activeResultType === "unranked" ? " unranked-card" : ""}`;
+        card.className = "course-card";
 
         const rank = document.createElement("div");
         rank.className = "rank-cell";
-        rank.textContent = state.activeResultType === "ranked" ? String(index + 1).padStart(2, "0") : "—";
+        rank.textContent = String(index + 1).padStart(2, "0");
 
         const main = document.createElement("div");
         main.className = "course-main";
@@ -2581,28 +2531,17 @@
 
         const metrics = document.createElement("div");
         metrics.className = "rate-cell";
-        if (state.activeResultType === "ranked") {
-          const percent = course.estimatedAdmissionRate * 100;
-          const rate = document.createElement("div");
-          rate.className = `rate-primary${percent <= 25 ? " low" : percent <= 60 ? " medium" : ""}`;
-          rate.innerHTML = `<strong>${percent.toLocaleString("zh-TW", { maximumFractionDigits: 1 })}%</strong><span>推估錄取率</span>`;
-          const remaining = document.createElement("div");
-          remaining.className = "metric";
-          remaining.innerHTML = `<strong>${safeNumber(course.enrollmentStatus?.remaining)}</strong><span>剩餘名額</span>`;
-          const registered = document.createElement("div");
-          registered.className = "metric";
-          registered.innerHTML = `<strong>${safeNumber(course.enrollmentStatus?.registered)}</strong><span>已登記</span>`;
-          metrics.append(rate, remaining, registered);
-        } else {
-          const stateBlock = document.createElement("div");
-          stateBlock.className = "unranked-state";
-          if (course.statusError) {
-            stateBlock.innerHTML = "<strong>狀態讀取失敗</strong><span>可稍後重新搜尋</span>";
-          } else {
-            stateBlock.innerHTML = `<strong>目前無人登記</strong><span>剩餘名額 ${safeNumber(course.enrollmentStatus?.remaining)} · 已選上 ${safeNumber(course.enrollmentStatus?.enrolled)}</span>`;
-          }
-          metrics.append(stateBlock);
-        }
+        const percent = course.estimatedAdmissionRate * 100;
+        const rate = document.createElement("div");
+        rate.className = `rate-primary${percent <= 25 ? " low" : percent <= 60 ? " medium" : ""}`;
+        rate.innerHTML = `<strong>${percent.toLocaleString("zh-TW", { maximumFractionDigits: 1 })}%</strong><span>推估錄取率</span>`;
+        const remaining = document.createElement("div");
+        remaining.className = "metric";
+        remaining.innerHTML = `<strong>${safeNumber(course.enrollmentStatus?.remaining)}</strong><span>剩餘名額</span>`;
+        const registered = document.createElement("div");
+        registered.className = "metric";
+        registered.innerHTML = `<strong>${safeNumber(course.enrollmentStatus?.registered)}</strong><span>已登記</span>`;
+        metrics.append(rate, remaining, registered);
 
         card.append(rank, main, metrics);
         return card;
@@ -2663,8 +2602,6 @@
       elements.cancelButton.addEventListener("click", () => state.controller?.abort());
       elements.popularitySort.addEventListener("click", () => setSortMode("popularity"));
       elements.gradeSort.addEventListener("click", () => setSortMode("grade"));
-      elements.rankedTab.addEventListener("click", () => activateResultTab("ranked"));
-      elements.unrankedTab.addEventListener("click", () => activateResultTab("unranked"));
       elements.loadMore.addEventListener("click", renderNextBatch);
       document.querySelectorAll('input[name="match-mode"]').forEach((input) => input.addEventListener("change", syncUrl));
       setupAutomaticLoading();
