@@ -790,25 +790,31 @@
       }
 
       .grade-badge {
-        display: inline-flex;
+        display: inline-grid;
         min-height: 29px;
-        align-items: center;
-        gap: 7px;
-        padding: 4px 9px;
+        gap: 3px;
+        padding: 7px 10px;
         border: 1px solid #c8d7ee;
-        border-radius: 999px;
+        border-radius: 12px;
         background: var(--primary-soft);
         color: var(--primary-deep);
         font-size: 11px;
-        white-space: nowrap;
       }
 
-      .grade-badge strong {
+      .grade-record {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px;
+        line-height: 1.4;
+      }
+
+      .grade-record strong {
         font-size: 12px;
         font-variant-numeric: tabular-nums;
       }
 
-      .grade-badge small {
+      .grade-record small {
         color: #5f6f87;
         font-size: 10px;
         font-weight: 700;
@@ -820,7 +826,7 @@
         color: #6e531f;
       }
 
-      .grade-badge.teacher-fallback small {
+      .grade-badge.teacher-fallback .grade-record small {
         color: #796b4f;
       }
 
@@ -1782,24 +1788,21 @@
 
       function summarizeGradeRecords(records, source) {
         if (!records.length) return null;
-        if (source === "teacher") {
-          const byCourse = new Map();
-          records.forEach((record) => addIndexRecord(byCourse, record.courseKey, record));
-          const courseRates = [...byCourse.values()].map((courseRecords) =>
-            courseRecords.reduce((sum, record) => sum + record.rate, 0) / courseRecords.length
-          );
-          return {
-            rate: courseRates.reduce((sum, rate) => sum + rate, 0) / courseRates.length,
-            source,
-            reportCount: records.length,
-            courseCount: courseRates.length,
-          };
-        }
+        const grouped = new Map();
+        records.forEach((record) => {
+          const key = `${record.courseKey}\u0001${record.semester}`;
+          addIndexRecord(grouped, key, record);
+        });
+        const entries = [...grouped.values()].map((groupRecords) => ({
+          courseName: groupRecords[0].courseName,
+          semester: groupRecords[0].semester,
+          rate: groupRecords.reduce((sum, record) => sum + record.rate, 0) / groupRecords.length,
+        })).sort((a, b) =>
+          b.semester.localeCompare(a.semester, "zh-TW", { numeric: true }) || a.courseName.localeCompare(b.courseName, "zh-TW")
+        );
         return {
-          rate: records.reduce((sum, record) => sum + record.rate, 0) / records.length,
           source,
-          reportCount: records.length,
-          courseCount: 1,
+          entries,
         };
       }
 
@@ -2374,6 +2377,12 @@
         return [...new Set(schedules.map((schedule) => schedule.classroom?.name).filter(Boolean))].join("、");
       }
 
+      function formatGradeSemester(value) {
+        const semester = String(value || "").trim();
+        const match = semester.match(/^(\d{3})([12])$/);
+        return match ? `${match[1]}-${match[2]}` : semester || "學期未記錄";
+      }
+
       function courseUrl(course) {
         const semester = encodeURIComponent(course.semester || "");
         const serial = encodeURIComponent(course.serial || "");
@@ -2389,16 +2398,21 @@
         if (!summary) return null;
         const badge = document.createElement("span");
         badge.className = `grade-badge${summary.source === "teacher" ? " teacher-fallback" : ""}`;
-        const value = document.createElement("strong");
-        value.textContent = `A+ ${summary.rate.toLocaleString("zh-TW", { maximumFractionDigits: 1 })}%`;
-        const source = document.createElement("small");
-        if (summary.source === "course-class") source.textContent = `同課同班 · ${summary.reportCount}筆`;
-        else if (summary.source === "course") source.textContent = `本課 · ${summary.reportCount}筆`;
-        else source.textContent = `教師其他課 · ${summary.courseCount}門`;
+        summary.entries.forEach((entry) => {
+          const row = document.createElement("span");
+          row.className = "grade-record";
+          const context = document.createElement("small");
+          context.textContent = summary.source === "teacher"
+            ? `${entry.courseName} · ${formatGradeSemester(entry.semester)} ·`
+            : `${formatGradeSemester(entry.semester)} ·`;
+          const value = document.createElement("strong");
+          value.textContent = `${entry.rate.toLocaleString("zh-TW", { maximumFractionDigits: 1 })}% A+`;
+          row.append(context, value);
+          badge.append(row);
+        });
         badge.title = summary.source === "teacher"
-          ? `此課程沒有同課同師紀錄；顯示該教師其他 ${summary.courseCount} 門課、${summary.reportCount} 筆歷史回報的各課程平均。非官方統計。`
-          : `同課程、同教師${summary.source === "course-class" ? "、同班次" : ""}的 ${summary.reportCount} 筆歷史回報平均。非官方統計。`;
-        badge.append(value, source);
+          ? "此課程沒有同課同師紀錄；以下分別列出該教師其他課程的歷史 A+ 率。非官方統計。"
+          : `同課程、同教師${summary.source === "course-class" ? "、同班次" : ""}的各學期歷史 A+ 率。非官方統計。`;
         return badge;
       }
 
