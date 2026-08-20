@@ -710,7 +710,7 @@
 
       .course-card {
         display: grid;
-        grid-template-columns: 72px minmax(0, 1fr) 252px;
+        grid-template-columns: 56px minmax(0, 1fr) 280px;
         align-items: stretch;
         overflow: hidden;
         border: 1px solid rgba(23, 48, 47, 0.11);
@@ -728,8 +728,9 @@
 
       .rank-cell {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
+        padding-top: 27px;
         border-right: 1px solid #e8ebe7;
         color: #87928f;
         font-family: Georgia, serif;
@@ -739,7 +740,7 @@
 
       .course-main {
         min-width: 0;
-        padding: 21px 23px;
+        padding: 25px 24px 24px;
       }
 
       .course-topline {
@@ -791,8 +792,10 @@
 
       .grade-badge {
         display: inline-grid;
+        width: fit-content;
         min-height: 29px;
         gap: 3px;
+        margin-top: 16px;
         padding: 7px 10px;
         border: 1px solid #c8d7ee;
         border-radius: 12px;
@@ -810,13 +813,13 @@
       }
 
       .grade-record strong {
-        font-size: 12px;
+        font-size: 13px;
         font-variant-numeric: tabular-nums;
       }
 
       .grade-record small {
         color: #5f6f87;
-        font-size: 10px;
+        font-size: 13px;
         font-weight: 700;
       }
 
@@ -851,7 +854,8 @@
 
       .rate-cell {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: minmax(102px, 1fr) minmax(78px, auto);
         align-items: stretch;
         border-left: 1px solid #e8ebe7;
       }
@@ -868,6 +872,7 @@
       }
 
       .rate-primary {
+        grid-column: 1 / -1;
         background: #eef5f1;
       }
 
@@ -921,6 +926,7 @@
       .unranked-state {
         display: flex;
         grid-column: 1 / -1;
+        grid-row: 1 / -1;
         flex-direction: column;
         align-items: center;
         justify-content: center;
@@ -1033,14 +1039,23 @@
           order: 1;
         }
 
+      }
+
+      @media (max-width: 780px) {
         .course-card {
-          grid-template-columns: 60px minmax(0, 1fr);
+          grid-template-columns: 52px minmax(0, 1fr);
         }
 
         .rate-cell {
           grid-column: 2;
+          grid-template-columns: 1fr 1fr 1fr;
+          grid-template-rows: minmax(76px, auto);
           border-top: 1px solid #e8ebe7;
           border-left: 0;
+        }
+
+        .rate-primary {
+          grid-column: auto;
         }
 
         .rate-primary,
@@ -1119,6 +1134,7 @@
         }
 
         .rank-cell {
+          padding-top: 21px;
           font-size: 17px;
         }
 
@@ -2450,7 +2466,6 @@
         titleRow.className = "course-title-row";
         titleRow.append(name);
         const gradeBadge = createGradeBadge(course);
-        if (gradeBadge) titleRow.append(gradeBadge);
 
         const meta = document.createElement("div");
         meta.className = "course-meta";
@@ -2479,6 +2494,7 @@
           meta.append(enrolled);
         }
         main.append(topline, titleRow, meta);
+        if (gradeBadge) main.append(gradeBadge);
 
         const metrics = document.createElement("div");
         metrics.className = "rate-cell";
