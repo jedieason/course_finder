@@ -782,6 +782,48 @@
         opacity: 0.55;
       }
 
+      .course-title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 9px 12px;
+      }
+
+      .grade-badge {
+        display: inline-flex;
+        min-height: 29px;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 9px;
+        border: 1px solid #c8d7ee;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary-deep);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .grade-badge strong {
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .grade-badge small {
+        color: #5f6f87;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .grade-badge.teacher-fallback {
+        border-color: #d8d2c4;
+        background: #f6f2e9;
+        color: #6e531f;
+      }
+
+      .grade-badge.teacher-fallback small {
+        color: #796b4f;
+      }
+
       .course-meta {
         display: flex;
         flex-wrap: wrap;
@@ -1593,7 +1635,7 @@
     <footer>
       <div class="shell footer-inner">
         <div>選課樂透 · 非國立臺灣大學官方服務</div>
-        <span>資料來源：<a href="https://course.ntu.edu.tw/" target="_blank" rel="noreferrer">臺大課程網</a> · 內部 API 可能隨時變更</span>
+        <span>資料來源：<a href="https://course.ntu.edu.tw/" target="_blank" rel="noreferrer">臺大課程網</a> · A+ 為歷史回報資料，非官方統計</span>
       </div>
     </footer>
 
@@ -1602,6 +1644,7 @@
 
       const API_BASE = "https://course.ntu.edu.tw/api";
       const SEARCH_URL = `${API_BASE}/v1/courses/search/quick?lang=zh-TW`;
+      const GRADE_DATA_URL = "grade-data.json";
       const INTERVALS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "X", "A", "B", "C", "D"];
       const DAY_NAMES = ["一", "二", "三", "四", "五", "六"];
       const PAGE_SIZE = 100;
@@ -1621,6 +1664,9 @@
         isSearching: false,
         dragValue: null,
         autoLoadPending: false,
+        gradeIndex: null,
+        gradeDataPromise: null,
+        gradeDataError: null,
       };
 
       const elements = {
@@ -1649,6 +1695,142 @@
         courseList: document.querySelector("#course-list"),
         loadMore: document.querySelector("#load-more"),
       };
+
+      function normalizeLookupText(value) {
+        return String(value || "").normalize("NFKC").toLocaleLowerCase("zh-Hant").replace(/\s+/g, "");
+      }
+
+      function normalizeClass(value) {
+        return String(value || "").trim().replace(/^0+(?=\d)/, "");
+      }
+
+      function splitTeacherNames(value) {
+        return String(value || "")
+          .split(/[、,，/;；]+/)
+          .flatMap((part) => {
+            const spaced = part.trim().split(/\s+/).filter(Boolean);
+            return spaced.length > 1 && spaced.every((name) => /^[\p{Script=Han}]{2,4}$/u.test(name)) ? spaced : [part.trim()];
+          })
+          .map((name) => normalizeLookupText(name))
+          .filter(Boolean);
+      }
+
+      function addIndexRecord(map, key, record) {
+        if (!key) return;
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(record);
+      }
+
+      function buildGradeIndex(rows) {
+        if (!Array.isArray(rows)) throw new Error("A+ 資料格式不符");
+        const byCourseTeacherClass = new Map();
+        const byCourseTeacher = new Map();
+        const byTeacher = new Map();
+        let validRecordCount = 0;
+
+        rows.forEach((row, rowIndex) => {
+          const [courseValue, teacherValue, classValue, semesterValue, rateValue] = row;
+          const rate = Number(rateValue);
+          const courseName = String(courseValue || "").trim();
+          const courseKey = normalizeLookupText(courseName);
+          const teacherKeys = [...new Set(splitTeacherNames(teacherValue))];
+          if (!Number.isFinite(rate) || rate < 0 || rate > 100 || !courseKey || !teacherKeys.length) return;
+
+          const record = {
+            id: rowIndex,
+            rate,
+            courseName,
+            courseKey,
+            classKey: normalizeClass(classValue),
+            semester: String(semesterValue || "").trim(),
+          };
+          validRecordCount += 1;
+          teacherKeys.forEach((teacherKey) => {
+            addIndexRecord(byCourseTeacher, `${courseKey}\u0001${teacherKey}`, record);
+            if (record.classKey) addIndexRecord(byCourseTeacherClass, `${courseKey}\u0001${teacherKey}\u0001${record.classKey}`, record);
+            addIndexRecord(byTeacher, teacherKey, record);
+          });
+        });
+
+        return { byCourseTeacherClass, byCourseTeacher, byTeacher, validRecordCount };
+      }
+
+      async function loadGradeData() {
+        if (state.gradeDataPromise) return state.gradeDataPromise;
+        state.gradeDataPromise = fetch(GRADE_DATA_URL)
+          .then((response) => {
+            if (!response.ok) throw new Error(`A+ 資料 HTTP ${response.status}`);
+            return response.json();
+          })
+          .then((data) => {
+            state.gradeIndex = buildGradeIndex(data.records);
+            return state.gradeIndex;
+          })
+          .catch((error) => {
+            state.gradeDataError = error;
+            console.warn("無法載入 A+ 歷史資料", error);
+            return null;
+          });
+        return state.gradeDataPromise;
+      }
+
+      function uniqueRecords(recordGroups) {
+        const records = new Map();
+        recordGroups.flat().forEach((record) => records.set(record.id, record));
+        return [...records.values()];
+      }
+
+      function summarizeGradeRecords(records, source) {
+        if (!records.length) return null;
+        if (source === "teacher") {
+          const byCourse = new Map();
+          records.forEach((record) => addIndexRecord(byCourse, record.courseKey, record));
+          const courseRates = [...byCourse.values()].map((courseRecords) =>
+            courseRecords.reduce((sum, record) => sum + record.rate, 0) / courseRecords.length
+          );
+          return {
+            rate: courseRates.reduce((sum, rate) => sum + rate, 0) / courseRates.length,
+            source,
+            reportCount: records.length,
+            courseCount: courseRates.length,
+          };
+        }
+        return {
+          rate: records.reduce((sum, record) => sum + record.rate, 0) / records.length,
+          source,
+          reportCount: records.length,
+          courseCount: 1,
+        };
+      }
+
+      function courseTeacherKeys(teacher) {
+        if (Array.isArray(teacher)) return [...new Set(teacher.flatMap((item) => splitTeacherNames(item?.name)))];
+        return splitTeacherNames(teacher?.name);
+      }
+
+      function lookupGradeSummary(course) {
+        if (!state.gradeIndex) return null;
+        const courseKey = normalizeLookupText(course.name);
+        const classKey = normalizeClass(course.class);
+        const teacherKeys = courseTeacherKeys(course.teacher);
+        if (!courseKey || !teacherKeys.length) return null;
+
+        if (classKey) {
+          const classRecords = uniqueRecords(teacherKeys.map((teacherKey) =>
+            state.gradeIndex.byCourseTeacherClass.get(`${courseKey}\u0001${teacherKey}\u0001${classKey}`) || []
+          ));
+          if (classRecords.length) return summarizeGradeRecords(classRecords, "course-class");
+        }
+
+        const courseRecords = uniqueRecords(teacherKeys.map((teacherKey) =>
+          state.gradeIndex.byCourseTeacher.get(`${courseKey}\u0001${teacherKey}`) || []
+        ));
+        if (courseRecords.length) return summarizeGradeRecords(courseRecords, "course");
+
+        const teacherRecords = uniqueRecords(teacherKeys.flatMap((teacherKey) => state.gradeIndex.byTeacher.get(teacherKey) || []))
+          .filter((record) => record.courseKey !== courseKey);
+        return summarizeGradeRecords(teacherRecords, "teacher");
+      }
 
       function createSchedule() {
         DAY_NAMES.forEach((day, dayIndex) => {
@@ -2065,6 +2247,8 @@
 
           updateProgress("找到符合條件的課程", `共 ${courses.length.toLocaleString("zh-TW")} 門，開始讀取即時名額`, 31);
           const rows = await fetchStatuses(courses, state.controller.signal);
+          updateProgress("正在比對歷史成績", "整理課程與教師的 A+ 率紀錄", 98);
+          await loadGradeData();
           const ranked = rows.filter((row) => row.estimatedAdmissionRate !== null).sort(compareRanked);
           const unranked = rows
             .filter((row) => row.estimatedAdmissionRate === null)
@@ -2200,6 +2384,24 @@
         return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${path}</svg>`;
       }
 
+      function createGradeBadge(course) {
+        const summary = lookupGradeSummary(course);
+        if (!summary) return null;
+        const badge = document.createElement("span");
+        badge.className = `grade-badge${summary.source === "teacher" ? " teacher-fallback" : ""}`;
+        const value = document.createElement("strong");
+        value.textContent = `A+ ${summary.rate.toLocaleString("zh-TW", { maximumFractionDigits: 1 })}%`;
+        const source = document.createElement("small");
+        if (summary.source === "course-class") source.textContent = `同課同班 · ${summary.reportCount}筆`;
+        else if (summary.source === "course") source.textContent = `本課 · ${summary.reportCount}筆`;
+        else source.textContent = `教師其他課 · ${summary.courseCount}門`;
+        badge.title = summary.source === "teacher"
+          ? `此課程沒有同課同師紀錄；顯示該教師其他 ${summary.courseCount} 門課、${summary.reportCount} 筆歷史回報的各課程平均。非官方統計。`
+          : `同課程、同教師${summary.source === "course-class" ? "、同班次" : ""}的 ${summary.reportCount} 筆歷史回報平均。非官方統計。`;
+        badge.append(value, source);
+        return badge;
+      }
+
       function createCourseCard(course, index) {
         const card = document.createElement("article");
         card.className = `course-card${state.activeResultType === "unranked" ? " unranked-card" : ""}`;
@@ -2230,6 +2432,11 @@
         name.rel = "noreferrer";
         name.textContent = course.name || "未命名課程";
         name.insertAdjacentHTML("beforeend", svgIcon('<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'));
+        const titleRow = document.createElement("div");
+        titleRow.className = "course-title-row";
+        titleRow.append(name);
+        const gradeBadge = createGradeBadge(course);
+        if (gradeBadge) titleRow.append(gradeBadge);
 
         const meta = document.createElement("div");
         meta.className = "course-meta";
@@ -2257,7 +2464,7 @@
           enrolled.append(document.createTextNode(`已選上 ${safeNumber(course.enrollmentStatus.enrolled)}`));
           meta.append(enrolled);
         }
-        main.append(topline, name, meta);
+        main.append(topline, titleRow, meta);
 
         const metrics = document.createElement("div");
         metrics.className = "rate-cell";
@@ -2332,6 +2539,7 @@
 
       createSchedule();
       restoreFromUrl();
+      loadGradeData();
       attachTagInput(elements.wantedInput, "wanted");
       attachTagInput(elements.excludedInput, "excluded");
       elements.form.addEventListener("submit", runSearch);
