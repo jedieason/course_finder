@@ -648,6 +648,26 @@
         font-size: 13px;
       }
 
+      .result-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .sort-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .sort-label {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
       .result-tabs {
         display: flex;
         gap: 5px;
@@ -1108,8 +1128,18 @@
           display: block;
         }
 
-        .result-tabs {
+        .result-controls {
           margin-top: 18px;
+          justify-content: stretch;
+        }
+
+        .sort-control {
+          width: 100%;
+        }
+
+        .sort-control .result-tabs,
+        .result-controls > .result-tabs {
+          flex: 1;
         }
 
         .result-tab {
@@ -1637,9 +1667,18 @@
             <h2 id="results-title">搜尋結果</h2>
             <p id="results-summary" class="results-summary"></p>
           </div>
-          <div class="result-tabs" role="tablist" aria-label="結果分類">
-            <button id="ranked-tab" class="result-tab active" type="button" role="tab" aria-selected="true">可排名 0</button>
-            <button id="unranked-tab" class="result-tab" type="button" role="tab" aria-selected="false">無法估算 0</button>
+          <div class="result-controls">
+            <div class="sort-control">
+              <span class="sort-label">排序</span>
+              <div class="result-tabs" role="group" aria-label="排序方式">
+                <button id="popularity-sort" class="result-tab active" type="button" aria-pressed="true">熱度</button>
+                <button id="grade-sort" class="result-tab" type="button" aria-pressed="false">A+ 率</button>
+              </div>
+            </div>
+            <div class="result-tabs" role="tablist" aria-label="結果分類">
+              <button id="ranked-tab" class="result-tab active" type="button" role="tab" aria-selected="true">可排名 0</button>
+              <button id="unranked-tab" class="result-tab" type="button" role="tab" aria-selected="false">無法估算 0</button>
+            </div>
           </div>
         </header>
 
@@ -1681,6 +1720,9 @@
         ranked: [],
         unranked: [],
         activeResultType: "ranked",
+        sortMode: "popularity",
+        resultTotal: 0,
+        unrankedReasons: "",
         renderedCount: 0,
         controller: null,
         isSearching: false,
@@ -1709,6 +1751,8 @@
         errorCard: document.querySelector("#error-card"),
         resultsSection: document.querySelector("#results-section"),
         resultsSummary: document.querySelector("#results-summary"),
+        popularitySort: document.querySelector("#popularity-sort"),
+        gradeSort: document.querySelector("#grade-sort"),
         rankedTab: document.querySelector("#ranked-tab"),
         unrankedTab: document.querySelector("#unranked-tab"),
         semesterStat: document.querySelector("#semester-stat"),
@@ -1849,6 +1893,21 @@
         const teacherRecords = uniqueRecords(teacherKeys.flatMap((teacherKey) => state.gradeIndex.byTeacher.get(teacherKey) || []))
           .filter((record) => record.courseKey !== courseKey);
         return summarizeGradeRecords(teacherRecords, "teacher");
+      }
+
+      function gradeSortValue(course) {
+        const summary = lookupGradeSummary(course);
+        if (!summary?.entries?.length) return null;
+        return summary.entries.reduce((sum, entry) => sum + entry.rate, 0) / summary.entries.length;
+      }
+
+      function compareByGrade(a, b) {
+        const aRate = gradeSortValue(a);
+        const bRate = gradeSortValue(b);
+        if (aRate === null && bRate === null) return collator.compare(a.name || "", b.name || "");
+        if (aRate === null) return 1;
+        if (bRate === null) return -1;
+        return bRate - aRate || collator.compare(a.name || "", b.name || "") || collator.compare(a.serial || "", b.serial || "");
       }
 
       function createSchedule() {
@@ -2286,6 +2345,7 @@
         state.ranked = ranked;
         state.unranked = unranked;
         state.activeResultType = "ranked";
+        state.sortMode = "popularity";
         const semesters = [...new Set(courses.map((course) => course.semester).filter(Boolean))].sort(collator.compare);
         const failed = unranked.filter((course) => course.statusError).length;
         const noRegistration = unranked.length - failed;
@@ -2302,10 +2362,10 @@
           noRegistration ? `${noRegistration.toLocaleString("zh-TW")} 門因無人登記` : "",
           failed ? `${failed.toLocaleString("zh-TW")} 門狀態讀取失敗` : "",
         ].filter(Boolean).join("、");
-        elements.resultsSummary.textContent = total
-          ? `依未四捨五入的推估錄取率排序；${unrankedReasons ? `${unrankedReasons}，不列入排名。` : "所有符合課程皆可排名。"}`
-          : "沒有找到符合目前時段與關鍵字的課程。";
+        state.resultTotal = total;
+        state.unrankedReasons = unrankedReasons;
         elements.resultsSection.classList.add("visible");
+        setSortMode("popularity", false);
         activateResultTab("ranked");
         elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -2322,8 +2382,31 @@
         renderNextBatch();
       }
 
+      function updateResultsSummary() {
+        if (!state.resultTotal) {
+          elements.resultsSummary.textContent = "沒有找到符合目前時段與關鍵字的課程。";
+          return;
+        }
+        const suffix = state.unrankedReasons ? `${state.unrankedReasons}，不列入熱度排名。` : "所有符合課程皆可計算熱度。";
+        elements.resultsSummary.textContent = state.sortMode === "grade"
+          ? `依歷史 A+ 率由高到低排序，無紀錄者置後；${suffix}`
+          : `依未四捨五入的中簽率由低到高排序；${suffix}`;
+      }
+
+      function setSortMode(mode, rerender = true) {
+        state.sortMode = mode === "grade" ? "grade" : "popularity";
+        const popularityActive = state.sortMode === "popularity";
+        elements.popularitySort.classList.toggle("active", popularityActive);
+        elements.popularitySort.setAttribute("aria-pressed", String(popularityActive));
+        elements.gradeSort.classList.toggle("active", !popularityActive);
+        elements.gradeSort.setAttribute("aria-pressed", String(!popularityActive));
+        updateResultsSummary();
+        if (rerender) activateResultTab(state.activeResultType);
+      }
+
       function renderNextBatch() {
-        const list = state.activeResultType === "ranked" ? state.ranked : state.unranked;
+        const source = state.activeResultType === "ranked" ? state.ranked : state.unranked;
+        const list = state.sortMode === "grade" ? [...source].sort(compareByGrade) : source;
         if (!list.length) {
           const empty = document.createElement("div");
           empty.className = "empty-results";
@@ -2578,6 +2661,8 @@
         syncUrl();
       });
       elements.cancelButton.addEventListener("click", () => state.controller?.abort());
+      elements.popularitySort.addEventListener("click", () => setSortMode("popularity"));
+      elements.gradeSort.addEventListener("click", () => setSortMode("grade"));
       elements.rankedTab.addEventListener("click", () => activateResultTab("ranked"));
       elements.unrankedTab.addEventListener("click", () => activateResultTab("unranked"));
       elements.loadMore.addEventListener("click", renderNextBatch);
