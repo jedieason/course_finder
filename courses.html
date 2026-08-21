@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#102a2a" />
+    <meta name="description" content="臺大課程推薦與評價查詢指南：搜尋經濟學、社會學、普通物理、微積分、資料結構等課程，搭配 A+ 率、錄取熱度與 Dcard、PTT 修課評價選課。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:site_name" content="選課樂透" />
+    <meta property="og:title" content="臺大課程推薦與評價查詢｜選課樂透" />
+    <meta property="og:description" content="從歷史 A+ 率、即時錄取熱度與學生社群評價探索臺大課程。" />
+    <meta property="og:url" content="https://jedieason.github.io/course_finder/courses.html" />
+    <link rel="canonical" href="https://jedieason.github.io/course_finder/courses.html" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="sitemap.xml" type="application/xml" />
+    <title>臺大課程推薦與評價查詢｜經濟學、社會學、普通物理｜選課樂透</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "常見臺大課程探索",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "item": {
+              "@type": "Course",
+              "url": "https://jedieason.github.io/course_finder/courses.html#economics",
+              "name": "經濟學",
+              "description": "探索臺大經濟學課程、教師、A+ 率與錄取熱度。",
+              "provider": { "@type": "Organization", "name": "國立臺灣大學", "sameAs": "https://www.ntu.edu.tw/" }
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "item": {
+              "@type": "Course",
+              "url": "https://jedieason.github.io/course_finder/courses.html#sociology",
+              "name": "社會學",
+              "description": "探索臺大社會學課程、教師、A+ 率與錄取熱度。",
+              "provider": { "@type": "Organization", "name": "國立臺灣大學", "sameAs": "https://www.ntu.edu.tw/" }
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "item": {
+              "@type": "Course",
+              "url": "https://jedieason.github.io/course_finder/courses.html#physics",
+              "name": "普通物理學",
+              "description": "探索臺大普通物理課程、教師、A+ 率與錄取熱度。",
+              "provider": { "@type": "Organization", "name": "國立臺灣大學", "sameAs": "https://www.ntu.edu.tw/" }
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "item": {
+              "@type": "Course",
+              "url": "https://jedieason.github.io/course_finder/courses.html#calculus",
+              "name": "微積分",
+              "description": "探索臺大微積分課程、教師、A+ 率與錄取熱度。",
+              "provider": { "@type": "Organization", "name": "國立臺灣大學", "sameAs": "https://www.ntu.edu.tw/" }
+            }
+          }
+        ]
+      }
+    </script>
+    <style>
+      :root { color-scheme: light; --ink: #17302f; --muted: #657573; --paper: #f5f2ea; --surface: #fffefa; --line: #dce2dd; --primary: #0f6b60; --soft: #dff0e9; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; line-height: 1.65; }
+      a { color: inherit; }
+      .shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 22px 0; border-bottom: 1px solid var(--line); background: var(--surface); }
+      header .shell { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+      .brand { font-size: 18px; font-weight: 800; text-decoration: none; }
+      .back { padding: 9px 14px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; }
+      main { padding: 72px 0 84px; }
+      h1 { max-width: 760px; margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.12; letter-spacing: -0.04em; }
+      .lead { max-width: 720px; margin: 22px 0 42px; color: var(--muted); font-size: 17px; }
+      h2 { margin: 52px 0 18px; font-size: 28px; }
+      .course-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+      .course-card { padding: 24px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); }
+      .course-card h3 { margin: 0 0 7px; font-size: 22px; }
+      .course-card p { margin: 0 0 18px; color: var(--muted); }
+      .course-card a { color: var(--primary); font-weight: 800; text-underline-offset: 3px; }
+      .guide { padding: 28px; border-radius: 24px; background: var(--soft); }
+      .guide ol { margin-bottom: 0; padding-left: 22px; }
+      footer { padding: 28px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+      @media (max-width: 640px) { main { padding-top: 48px; } .course-grid { grid-template-columns: 1fr; } header .shell { align-items: flex-start; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="shell">
+        <a class="brand" href="index.html">選課樂透</a>
+        <a class="back" href="index.html">開始搜尋臺大課程</a>
+      </div>
+    </header>
+    <main class="shell">
+      <h1>臺大課程推薦與評價查詢</h1>
+      <p class="lead">搜尋臺大課程時，除了參考 Dcard、PTT 的修課評價，也可以比較開課教師、歷史 A+ 率、可上課時段與即時錄取熱度。選課樂透將這些條件整理成可排序的課程清單。</p>
+
+      <h2>常見課程探索</h2>
+      <div class="course-grid">
+        <article id="economics" class="course-card">
+          <h3>經濟學</h3>
+          <p>查詢臺大經濟學、經濟學原理與相關課程，依教師、A+ 率與錄取熱度比較，再搭配 Dcard、PTT 的修課心得判斷。</p>
+          <a href="index.html?k=經濟學">搜尋臺大經濟學課程</a>
+        </article>
+        <article id="sociology" class="course-card">
+          <h3>社會學</h3>
+          <p>探索臺大社會學與社會科學領域課程，查看歷史成績比例、時段及即時名額，輔助閱讀學生社群評價。</p>
+          <a href="index.html?k=社會學">搜尋臺大社會學課程</a>
+        </article>
+        <article id="physics" class="course-card">
+          <h3>普通物理學</h3>
+          <p>比較臺大普通物理、普通物理學甲乙等課程的教師、時段與 A+ 率，找到適合自己的基礎物理課程。</p>
+          <a href="index.html?k=普通物理">搜尋臺大普通物理課程</a>
+        </article>
+        <article id="calculus" class="course-card">
+          <h3>微積分</h3>
+          <p>查詢不同班次與教師的臺大微積分課程，綜合成績比例、錄取熱度及 Dcard、PTT 修課經驗選擇。</p>
+          <a href="index.html?k=微積分">搜尋臺大微積分課程</a>
+        </article>
+        <article class="course-card">
+          <h3>資料結構</h3>
+          <p>探索資料結構、演算法與程式設計相關課程，快速比較授課教師、A+ 率和即時登記情形。</p>
+          <a href="index.html?k=資料結構">搜尋臺大資料結構課程</a>
+        </article>
+        <article class="course-card">
+          <h3>普通化學與統計學</h3>
+          <p>搜尋普通化學、統計學、心理學等熱門基礎課程，利用時段篩選與排序縮小選課範圍。</p>
+          <a href="index.html?k=普通化學">搜尋臺大普通化學課程</a>
+        </article>
+      </div>
+
+      <section class="guide">
+        <h2>如何綜合課程評價選課</h2>
+        <ol>
+          <li>在 Dcard 或 PTT 搜尋「課程名稱＋臺大＋教師」，確認評價是否對應同一位老師與近年學期。</li>
+          <li>回到選課樂透比較歷史 A+ 率；沒有同課紀錄時，系統會列出該教師其他課程資料作為參考。</li>
+          <li>用熱度排序查看即時中簽率，再以時間表排除無法完整出席的課程。</li>
+          <li>將候選課程加入星號，集中比較後再前往臺大課程網確認最新課綱與限制條件。</li>
+        </ol>
+      </section>
+    </main>
+    <footer><div class="shell">選課樂透為非官方工具；課程資料與歷史成績比例僅供選課參考。</div></footer>
+  </body>
+</html>

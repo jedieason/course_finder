@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jedieason.github.io/course_finder/sitemap.xml
