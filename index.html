@@ -662,6 +662,27 @@
         font-weight: 700;
       }
 
+      .clear-stars {
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .clear-stars:hover:not(:disabled) {
+        color: var(--ink);
+      }
+
+      .clear-stars:disabled {
+        cursor: default;
+        opacity: 0.45;
+      }
+
       .result-tabs {
         display: flex;
         gap: 5px;
@@ -802,6 +823,27 @@
         flex-wrap: wrap;
         align-items: center;
         gap: 9px 12px;
+      }
+
+      .favorite-button {
+        display: inline-grid;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 auto;
+        place-items: center;
+        margin-left: auto;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--surface);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      .favorite-button:hover,
+      .favorite-button.active {
+        color: var(--warning);
       }
 
       .grade-badge {
@@ -1134,6 +1176,10 @@
         .sort-control .result-tabs,
         .result-controls > .result-tabs {
           flex: 1;
+        }
+
+        .clear-stars {
+          flex: 1 0 100%;
         }
 
         .result-tab {
@@ -1664,10 +1710,15 @@
             <div class="sort-control">
               <span class="sort-label">排序</span>
               <div class="result-tabs" role="group" aria-label="排序方式">
-                <button id="popularity-sort" class="result-tab active" type="button" aria-pressed="true">熱度</button>
-                <button id="grade-sort" class="result-tab" type="button" aria-pressed="false">A+ 率</button>
+                <button id="grade-sort" class="result-tab active" type="button" aria-pressed="true">A+ 率</button>
+                <button id="popularity-sort" class="result-tab" type="button" aria-pressed="false">熱度</button>
               </div>
             </div>
+            <div class="result-tabs" role="tablist" aria-label="收藏範圍">
+              <button id="all-results-tab" class="result-tab active" type="button" role="tab" aria-selected="true">全部 0</button>
+              <button id="favorites-tab" class="result-tab" type="button" role="tab" aria-selected="false">已加星號 0</button>
+            </div>
+            <button id="clear-stars" class="clear-stars" type="button" disabled>清除所有星號</button>
           </div>
         </header>
 
@@ -1700,6 +1751,7 @@
       const PAGE_SIZE = 100;
       const RENDER_BATCH = 40;
       const MAX_TAGS = 8;
+      const FAVORITES_STORAGE_KEY = "course-finder-favorites-v1";
       const collator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
 
       const state = {
@@ -1707,7 +1759,9 @@
         wanted: [],
         excluded: [],
         results: [],
-        sortMode: "popularity",
+        sortMode: "grade",
+        resultView: "all",
+        favoriteKeys: new Set(),
         renderedCount: 0,
         controller: null,
         isSearching: false,
@@ -1737,6 +1791,9 @@
         resultsSection: document.querySelector("#results-section"),
         popularitySort: document.querySelector("#popularity-sort"),
         gradeSort: document.querySelector("#grade-sort"),
+        allResultsTab: document.querySelector("#all-results-tab"),
+        favoritesTab: document.querySelector("#favorites-tab"),
+        clearStars: document.querySelector("#clear-stars"),
         semesterStat: document.querySelector("#semester-stat"),
         matchedStat: document.querySelector("#matched-stat"),
         collectedStat: document.querySelector("#collected-stat"),
@@ -1750,6 +1807,32 @@
 
       function normalizeClass(value) {
         return String(value || "").trim().replace(/^0+(?=\d)/, "");
+      }
+
+      function loadFavoriteKeys() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || "[]");
+          return new Set(Array.isArray(stored) ? stored.filter((key) => typeof key === "string") : []);
+        } catch (error) {
+          console.warn("無法讀取星號收藏", error);
+          return new Set();
+        }
+      }
+
+      function saveFavoriteKeys() {
+        try {
+          localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...state.favoriteKeys]));
+        } catch (error) {
+          console.warn("無法儲存星號收藏", error);
+        }
+      }
+
+      function courseFavoriteKey(course) {
+        return [course.semester || "", course.serial || course.id || course.identifier || ""].join("|");
+      }
+
+      function isFavorite(course) {
+        return state.favoriteKeys.has(courseFavoriteKey(course));
       }
 
       function splitTeacherNames(value) {
@@ -1890,6 +1973,48 @@
         if (aRate === null) return 1;
         if (bRate === null) return -1;
         return bRate - aRate || collator.compare(a.name || "", b.name || "") || collator.compare(a.serial || "", b.serial || "");
+      }
+
+      function sortedResultEntries() {
+        const sorted = state.sortMode === "grade" ? [...state.results].sort(compareByGrade) : state.results;
+        const entries = sorted.map((course, index) => ({ course, rank: index + 1 }));
+        if (state.resultView === "favorites") return entries.filter(({ course }) => isFavorite(course));
+        return entries.sort((a, b) => Number(isFavorite(b.course)) - Number(isFavorite(a.course)));
+      }
+
+      function updateFavoriteControls() {
+        const favoriteCount = state.results.filter(isFavorite).length;
+        const allActive = state.resultView === "all";
+        elements.allResultsTab.textContent = `全部 ${state.results.length.toLocaleString("zh-TW")}`;
+        elements.favoritesTab.textContent = `已加星號 ${favoriteCount.toLocaleString("zh-TW")}`;
+        elements.allResultsTab.classList.toggle("active", allActive);
+        elements.allResultsTab.setAttribute("aria-selected", String(allActive));
+        elements.favoritesTab.classList.toggle("active", !allActive);
+        elements.favoritesTab.setAttribute("aria-selected", String(!allActive));
+        elements.clearStars.disabled = state.favoriteKeys.size === 0;
+      }
+
+      function setResultView(view) {
+        state.resultView = view === "favorites" ? "favorites" : "all";
+        updateFavoriteControls();
+        resetResultsList();
+      }
+
+      function toggleFavorite(course) {
+        const key = courseFavoriteKey(course);
+        if (state.favoriteKeys.has(key)) state.favoriteKeys.delete(key);
+        else state.favoriteKeys.add(key);
+        saveFavoriteKeys();
+        updateFavoriteControls();
+        resetResultsList();
+      }
+
+      function clearAllFavorites() {
+        state.favoriteKeys.clear();
+        saveFavoriteKeys();
+        state.resultView = "all";
+        updateFavoriteControls();
+        resetResultsList();
       }
 
       function createSchedule() {
@@ -2325,7 +2450,8 @@
 
       function finishResults(results, collectedAt, courses) {
         state.results = results;
-        state.sortMode = "popularity";
+        state.sortMode = "grade";
+        state.resultView = "all";
         const semesters = [...new Set(courses.map((course) => course.semester).filter(Boolean))].sort(collator.compare);
         const total = results.length;
 
@@ -2335,7 +2461,8 @@
           month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
         }).format(collectedAt);
         elements.resultsSection.classList.add("visible");
-        setSortMode("popularity", false);
+        setSortMode("grade", false);
+        updateFavoriteControls();
         resetResultsList();
         elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -2357,12 +2484,13 @@
       }
 
       function renderNextBatch() {
-        const source = state.results;
-        const list = state.sortMode === "grade" ? [...source].sort(compareByGrade) : source;
+        const list = sortedResultEntries();
         if (!list.length) {
           const empty = document.createElement("div");
           empty.className = "empty-results";
-          empty.innerHTML = "<strong>沒有符合條件的課程</strong>試著增加可上課時段，或調整關鍵字。";
+          empty.innerHTML = state.resultView === "favorites"
+            ? "<strong>尚未加入星號</strong>回到全部結果，點選課程旁的星號即可收藏。"
+            : "<strong>沒有符合條件的課程</strong>試著增加可上課時段，或調整關鍵字。";
           elements.courseList.append(empty);
           elements.loadMore.classList.remove("visible");
           return;
@@ -2371,7 +2499,7 @@
         const end = Math.min(state.renderedCount + RENDER_BATCH, list.length);
         const fragment = document.createDocumentFragment();
         for (let index = state.renderedCount; index < end; index += 1) {
-          fragment.append(createCourseCard(list[index], index));
+          fragment.append(createCourseCard(list[index].course, list[index].rank));
         }
         elements.courseList.append(fragment);
         state.renderedCount = end;
@@ -2465,13 +2593,13 @@
         return badge;
       }
 
-      function createCourseCard(course, index) {
+      function createCourseCard(course, rankNumber) {
         const card = document.createElement("article");
         card.className = "course-card";
 
         const rank = document.createElement("div");
         rank.className = "rank-cell";
-        rank.textContent = String(index + 1).padStart(2, "0");
+        rank.textContent = String(rankNumber).padStart(2, "0");
 
         const main = document.createElement("div");
         main.className = "course-main";
@@ -2498,6 +2626,15 @@
         const titleRow = document.createElement("div");
         titleRow.className = "course-title-row";
         titleRow.append(name);
+        const favorite = document.createElement("button");
+        favorite.type = "button";
+        favorite.className = `favorite-button${isFavorite(course) ? " active" : ""}`;
+        favorite.textContent = isFavorite(course) ? "★" : "☆";
+        favorite.setAttribute("aria-pressed", String(isFavorite(course)));
+        favorite.setAttribute("aria-label", `${isFavorite(course) ? "移除" : "加入"}星號：${course.name || "未命名課程"}`);
+        favorite.title = isFavorite(course) ? "移除星號" : "加入星號";
+        favorite.addEventListener("click", () => toggleFavorite(course));
+        titleRow.append(favorite);
         const gradeBadge = createGradeBadge(course);
 
         const meta = document.createElement("div");
@@ -2591,6 +2728,8 @@
 
       createSchedule();
       restoreFromUrl();
+      state.favoriteKeys = loadFavoriteKeys();
+      updateFavoriteControls();
       loadGradeData();
       attachTagInput(elements.wantedInput, "wanted");
       attachTagInput(elements.excludedInput, "excluded");
@@ -2602,6 +2741,9 @@
       elements.cancelButton.addEventListener("click", () => state.controller?.abort());
       elements.popularitySort.addEventListener("click", () => setSortMode("popularity"));
       elements.gradeSort.addEventListener("click", () => setSortMode("grade"));
+      elements.allResultsTab.addEventListener("click", () => setResultView("all"));
+      elements.favoritesTab.addEventListener("click", () => setResultView("favorites"));
+      elements.clearStars.addEventListener("click", clearAllFavorites);
       elements.loadMore.addEventListener("click", renderNextBatch);
       document.querySelectorAll('input[name="match-mode"]').forEach((input) => input.addEventListener("change", syncUrl));
       setupAutomaticLoading();
