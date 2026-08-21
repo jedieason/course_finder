@@ -716,6 +716,16 @@
         opacity: 0.45;
       }
 
+      .favorites-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin: -10px 0 16px;
+      }
+
+      .favorites-actions[hidden] {
+        display: none;
+      }
+
       .result-tabs {
         display: flex;
         gap: 5px;
@@ -1214,10 +1224,6 @@
         .sort-control .result-tabs,
         .result-controls > .result-tabs {
           flex: 1;
-        }
-
-        .clear-stars {
-          flex: 1 0 100%;
         }
 
         .result-tab {
@@ -1756,7 +1762,6 @@
               <button id="all-results-tab" class="result-tab active" type="button" role="tab" aria-selected="true">全部 0</button>
               <button id="favorites-tab" class="result-tab" type="button" role="tab" aria-selected="false">已加星號 0</button>
             </div>
-            <button id="clear-stars" class="clear-stars" type="button" disabled>清除所有星號</button>
           </div>
         </header>
 
@@ -1766,6 +1771,9 @@
           <div class="note-stat"><span>資料抓取時間</span><strong id="collected-stat">—</strong></div>
         </div>
 
+        <div id="favorites-actions" class="favorites-actions" hidden>
+          <button id="clear-stars" class="clear-stars" type="button" disabled>清除所有星號</button>
+        </div>
         <div id="course-list" class="course-list"></div>
         <button id="load-more" class="load-more" type="button" aria-live="polite">繼續向下捲動以載入更多</button>
       </section>
@@ -1790,6 +1798,7 @@
       const RENDER_BATCH = 40;
       const MAX_TAGS = 8;
       const FAVORITES_STORAGE_KEY = "course-finder-favorites-v1";
+      const FAVORITE_COURSES_STORAGE_KEY = "course-finder-favorite-courses-v2";
       const collator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
 
       const state = {
@@ -1800,6 +1809,7 @@
         sortMode: "grade",
         resultView: "all",
         favoriteKeys: new Set(),
+        favoriteCourses: new Map(),
         renderedCount: 0,
         controller: null,
         isSearching: false,
@@ -1831,6 +1841,7 @@
         gradeSort: document.querySelector("#grade-sort"),
         allResultsTab: document.querySelector("#all-results-tab"),
         favoritesTab: document.querySelector("#favorites-tab"),
+        favoritesActions: document.querySelector("#favorites-actions"),
         clearStars: document.querySelector("#clear-stars"),
         semesterStat: document.querySelector("#semester-stat"),
         matchedStat: document.querySelector("#matched-stat"),
@@ -1857,9 +1868,32 @@
         }
       }
 
-      function saveFavoriteKeys() {
+      function loadFavoriteCourses() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(FAVORITE_COURSES_STORAGE_KEY) || "[]");
+          const entries = Array.isArray(stored) ? stored : [];
+          return new Map(entries.flatMap((entry) => {
+            if (!entry || typeof entry.key !== "string" || !entry.course || typeof entry.course !== "object") return [];
+            const course = {
+              ...entry.course,
+              estimatedAdmissionRate: Number.isFinite(entry.course.estimatedAdmissionRate)
+                ? entry.course.estimatedAdmissionRate
+                : 1,
+            };
+            return [[entry.key, course]];
+          }));
+        } catch (error) {
+          console.warn("無法讀取星號課程", error);
+          return new Map();
+        }
+      }
+
+      function saveFavoriteData() {
         try {
           localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...state.favoriteKeys]));
+          localStorage.setItem(FAVORITE_COURSES_STORAGE_KEY, JSON.stringify(
+            [...state.favoriteCourses].map(([key, course]) => ({ key, course }))
+          ));
         } catch (error) {
           console.warn("無法儲存星號收藏", error);
         }
@@ -1871,6 +1905,17 @@
 
       function isFavorite(course) {
         return state.favoriteKeys.has(courseFavoriteKey(course));
+      }
+
+      function syncFavoriteCourses(courses) {
+        let changed = false;
+        courses.forEach((course) => {
+          const key = courseFavoriteKey(course);
+          if (!state.favoriteKeys.has(key)) return;
+          state.favoriteCourses.set(key, course);
+          changed = true;
+        });
+        if (changed) saveFavoriteData();
       }
 
       function splitTeacherNames(value) {
@@ -2014,14 +2059,15 @@
       }
 
       function sortedResultEntries() {
-        const sorted = state.sortMode === "grade" ? [...state.results].sort(compareByGrade) : state.results;
+        const source = state.resultView === "favorites" ? [...state.favoriteCourses.values()] : state.results;
+        const sorted = state.sortMode === "grade" ? [...source].sort(compareByGrade) : [...source].sort(compareRanked);
         const entries = sorted.map((course, index) => ({ course, rank: index + 1 }));
-        if (state.resultView === "favorites") return entries.filter(({ course }) => isFavorite(course));
+        if (state.resultView === "favorites") return entries;
         return entries.sort((a, b) => Number(isFavorite(b.course)) - Number(isFavorite(a.course)));
       }
 
       function updateFavoriteControls() {
-        const favoriteCount = state.results.filter(isFavorite).length;
+        const favoriteCount = state.favoriteCourses.size;
         const allActive = state.resultView === "all";
         elements.allResultsTab.textContent = `全部 ${state.results.length.toLocaleString("zh-TW")}`;
         elements.favoritesTab.textContent = `已加星號 ${favoriteCount.toLocaleString("zh-TW")}`;
@@ -2029,6 +2075,7 @@
         elements.allResultsTab.setAttribute("aria-selected", String(allActive));
         elements.favoritesTab.classList.toggle("active", !allActive);
         elements.favoritesTab.setAttribute("aria-selected", String(!allActive));
+        elements.favoritesActions.hidden = allActive;
         elements.clearStars.disabled = state.favoriteKeys.size === 0;
       }
 
@@ -2040,16 +2087,22 @@
 
       function toggleFavorite(course) {
         const key = courseFavoriteKey(course);
-        if (state.favoriteKeys.has(key)) state.favoriteKeys.delete(key);
-        else state.favoriteKeys.add(key);
-        saveFavoriteKeys();
+        if (state.favoriteKeys.has(key)) {
+          state.favoriteKeys.delete(key);
+          state.favoriteCourses.delete(key);
+        } else {
+          state.favoriteKeys.add(key);
+          state.favoriteCourses.set(key, course);
+        }
+        saveFavoriteData();
         updateFavoriteControls();
         resetResultsList();
       }
 
       function clearAllFavorites() {
         state.favoriteKeys.clear();
-        saveFavoriteKeys();
+        state.favoriteCourses.clear();
+        saveFavoriteData();
         state.resultView = "all";
         updateFavoriteControls();
         resetResultsList();
@@ -2488,6 +2541,7 @@
 
       function finishResults(results, collectedAt, courses) {
         state.results = results;
+        syncFavoriteCourses(results);
         state.sortMode = "grade";
         state.resultView = "all";
         const semesters = [...new Set(courses.map((course) => course.semester).filter(Boolean))].sort(collator.compare);
@@ -2767,6 +2821,8 @@
       createSchedule();
       restoreFromUrl();
       state.favoriteKeys = loadFavoriteKeys();
+      state.favoriteCourses = loadFavoriteCourses();
+      state.favoriteCourses.forEach((course, key) => state.favoriteKeys.add(key));
       updateFavoriteControls();
       loadGradeData();
       attachTagInput(elements.wantedInput, "wanted");
