@@ -763,8 +763,9 @@
 
       .rank-cell {
         display: flex;
-        align-items: flex-start;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
         padding-top: 27px;
         border-right: 1px solid #e8ebe7;
         color: #87928f;
@@ -831,7 +832,7 @@
         height: 34px;
         flex: 0 0 auto;
         place-items: center;
-        margin-left: auto;
+        margin-left: 0;
         border: 1px solid var(--line);
         border-radius: 50%;
         background: var(--surface);
@@ -844,6 +845,10 @@
       .favorite-button:hover,
       .favorite-button.active {
         color: var(--warning);
+      }
+
+      .rank-cell .favorite-button {
+        margin-top: 12px;
       }
 
       .grade-badge {
@@ -2634,7 +2639,7 @@
         favorite.setAttribute("aria-label", `${isFavorite(course) ? "移除" : "加入"}星號：${course.name || "未命名課程"}`);
         favorite.title = isFavorite(course) ? "移除星號" : "加入星號";
         favorite.addEventListener("click", () => toggleFavorite(course));
-        titleRow.append(favorite);
+        rank.append(favorite);
         const gradeBadge = createGradeBadge(course);
 
         const meta = document.createElement("div");
